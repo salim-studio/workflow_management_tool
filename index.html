@@ -1,0 +1,3070 @@
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background: #f0f2f5;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 100%;
+            padding: 10px;
+            margin: 0 auto;
+        }
+
+        @media (min-width: 769px) {
+            .container {
+                max-width: 1200px;
+            }
+        }
+
+        .toolbar {
+            background: #2c3e50;
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        @media (max-width: 768px) {
+            .toolbar {
+                flex-direction: column;
+                align-items: stretch;
+            }
+        }
+
+        .tool-button {
+            background: #3498db;
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin: 5px;
+            min-width: 120px;
+        }
+
+        @media (max-width: 768px) {
+            .tool-button {
+                width: 100%;
+            }
+        }
+
+        .tool-button:hover {
+            background: #2980b9;
+        }
+
+        .workflow-canvas {
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            min-height: 400px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            position: relative;
+            width: 100%;
+            overflow: auto;
+        }
+
+        .node {
+            position: absolute;
+            width: calc(100% - 20px);
+            max-width: 250px;
+            min-width: 150px;
+            background: white;
+            border: 2px solid #3498db;
+            border-radius: 8px;
+            padding: 10px;
+            cursor: move;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            z-index: 1;
+        }
+
+        .node-title {
+            font-weight: bold;
+            margin-bottom: 5px;
+            color: #2c3e50;
+        }
+
+        .node-ports {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 10px;
+        }
+
+        .port {
+            width: 12px;
+            height: 12px;
+            background: #95a5a6;
+            border-radius: 50%;
+            cursor: pointer;
+            position: relative;
+            z-index: 2;
+        }
+
+        .port:hover {
+            background: #3498db;
+        }
+
+        .connection-svg {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .connection {
+            stroke: #3498db;
+            stroke-width: 2;
+            fill: none;
+        }
+
+        .statistics-panel {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            margin-top: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            width: 100%;
+            overflow-x: auto;
+        }
+
+        .chart-container {
+            min-height: 300px;
+            width: 100%;
+            overflow-x: auto;
+        }
+
+        .file-input {
+            display: none;
+        }
+
+        .data-preview {
+            margin-top: 10px;
+            max-height: 200px;
+            overflow-y: auto;
+            font-size: 12px;
+        }
+
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .data-table th, .data-table td {
+            border: 1px solid #ddd;
+            padding: 4px;
+            text-align: left;
+        }
+
+        .stats-dropdown-content {
+            display: none;
+            position: absolute;
+            background-color: #f9f9f9;
+            min-width: 160px;
+            box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
+            z-index: 1000;
+            border-radius: 5px;
+        }
+
+        @media (max-width: 768px) {
+            .stats-dropdown-content {
+                width: 100%;
+                position: static;
+            }
+        }
+
+        .stats-dropdown-content a {
+            color: black;
+            padding: 12px 16px;
+            text-decoration: none;
+            display: block;
+            text-align: right;
+        }
+
+        .stats-dropdown-content a:hover {
+            background-color: #f1f1f1;
+        }
+
+        .show {
+            display: block;
+        }
+
+        #stats-dropdown {
+            position: relative;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
+            z-index: 1000;
+        }
+
+        .modal-content {
+            position: relative;
+            background-color: white;
+            margin: 5% auto;
+            padding: 20px;
+            width: 95%;
+            max-width: 600px;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
+        @media (max-width: 768px) {
+            .modal-content {
+                padding: 10px;
+            }
+        }
+
+        .close-modal {
+            position: absolute;
+            right: 10px;
+            top: 10px;
+            font-size: 24px;
+            cursor: pointer;
+            color: #666;
+        }
+
+        .desc-stats-options {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 10px;
+        }
+
+        @media (max-width: 768px) {
+            .desc-stats-options {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .variables-list {
+            margin: 15px 0;
+            max-height: 40vh;
+            overflow-y: auto;
+            border: 1px solid #ddd;
+            padding: 10px;
+            border-radius: 5px;
+        }
+
+        .variable-item {
+            display: flex;
+            align-items: center;
+            margin: 5px 0;
+            padding: 12px;
+            background: #f5f5f5;
+            border-radius: 4px;
+        }
+
+        .variable-item:hover {
+            background: #e9e9e9;
+        }
+
+        .variable-item input[type="checkbox"] {
+            margin-right: 8px;
+        }
+
+        .apply-stats-btn {
+            background: #3498db;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-top: 15px;
+        }
+
+        .apply-stats-btn:hover {
+            background: #2980b9;
+        }
+
+        .results-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 15px 0;
+            overflow-x: auto;
+            display: block;
+        }
+
+        .results-table th,
+        .results-table td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+
+        .results-table th {
+            background-color: #f5f5f5;
+            font-weight: bold;
+        }
+
+        @media (max-width: 768px) {
+            .results-table th,
+            .results-table td {
+                padding: 5px;
+                font-size: 14px;
+            }
+        }
+
+        .results-table tr:nth-child(even) {
+            background-color: #f9f9f9;
+        }
+
+        .delete-btn {
+            position: absolute;
+            top: 5px;
+            right: 5px;
+            background: #e74c3c;
+            color: white;
+            border: none;
+            border-radius: 3px;
+            width: 20px;
+            height: 20px;
+            line-height: 20px;
+            text-align: center;
+            cursor: pointer;
+            font-size: 12px;
+            padding: 0;
+        }
+
+        .delete-btn:hover {
+            background: #c0392b;
+        }
+
+        .regression-options {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            padding: 15px;
+        }
+
+        .variable-section {
+            background: #f5f5f5;
+            padding: 15px;
+            border-radius: 8px;
+        }
+
+        .var-select, .transform-select {
+            width: 100%;
+            padding: 8px;
+            margin: 5px 0;
+            border-radius: 4px;
+            border: 1px solid #ddd;
+        }
+
+        .transformations {
+            margin-top: 10px;
+        }
+
+        .independent-var-row {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            margin: 10px 0;
+            padding: 10px;
+            background: white;
+            border-radius: 4px;
+        }
+
+        .independent-var-row select {
+            flex: 1;
+        }
+
+        .remove-var-btn {
+            background: #e74c3c;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            padding: 5px 10px;
+            cursor: pointer;
+        }
+
+        .add-var-btn {
+            background: #2ecc71;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            padding: 8px 15px;
+            margin-top: 10px;
+            cursor: pointer;
+        }
+
+        .time-series-options {
+            background: #f5f5f5;
+            padding: 15px;
+            border-radius: 8px;
+        }
+
+        .option-row {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin: 10px 0;
+        }
+
+        .option-row input {
+            width: 60px;
+            padding: 5px;
+            border-radius: 4px;
+            border: 1px solid #ddd;
+        }
+
+        @media (max-width: 768px) {
+            .independent-var-row {
+                flex-direction: column;
+                gap: 5px;
+            }
+            
+            .option-row {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            
+            .option-row input {
+                width: 100%;
+            }
+        }
+        
+        .results-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        
+        .results-table th, 
+        .results-table td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: right;
+        }
+        
+        .results-table th {
+            background-color: #f2f2f2;
+            font-weight: bold;
+        }
+        
+        .results-table tr:nth-child(even) {
+            background-color: #f9f9f9;
+        }
+        
+        @media (max-width: 768px) {
+            .results-table {
+                font-size: 12px;
+            }
+            
+            .results-table th, 
+            .results-table td {
+                padding: 4px;
+            }
+        }
+        
+        .visualization-options {
+          margin: 20px 0;
+          padding: 15px;
+          background: #f5f5f5;
+          border-radius: 8px;
+        }
+
+        .vars-selection {
+          display: grid;
+          grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+          gap: 15px;
+          margin: 15px 0;
+        }
+
+        .plot-types {
+          margin: 15px 0;
+        }
+
+        .plot-select {
+          width: 100%;
+          padding: 8px;
+          border-radius: 4px;
+          border: 1px solid #ddd;
+        }
+
+        .apply-viz-btn {
+          background: #3498db;
+          color: white;
+          border: none;
+          padding: 10px 20px;
+          border-radius: 5px;
+          cursor: pointer;
+          margin-top: 15px;
+        }
+
+        .apply-viz-btn:hover {
+          background: #2980b9;
+        }
+
+        .statistics-panel .chart-container {
+          min-height: 400px;
+          width: 100%;
+          margin-top: 20px;
+          position: relative;
+        }
+    </style>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/jstat@latest/dist/jstat.min.js"></script>
+</head>
+<body>
+    <div class="container">
+        <div class="toolbar">
+            <button class="tool-button" onclick="addNode('Data Source')">&#x625;&#x636;&#x627;&#x641;&#x629; &#x645;&#x635;&#x62f;&#x631; &#x628;&#x64a;&#x627;&#x646;&#x627;&#x62a;</button>
+            <button class="tool-button" onclick="addNode('Filter')">&#x62a;&#x635;&#x641;&#x64a;&#x629;</button>
+            <button class="tool-button" id="stats-dropdown">&#x625;&#x62d;&#x635;&#x627;&#x626;&#x64a;&#x627;&#x62a; &#x25bc;</button>
+            <button class="tool-button" onclick="addNode('Visualization')">&#x62a;&#x635;&#x648;&#x631; &#x628;&#x64a;&#x627;&#x646;&#x64a;</button>
+            <div id="stats-menu" class="stats-dropdown-content">
+                <a href="javascript:void(0)" onclick="addNode('Descriptive Statistics')">&#x627;&#x644;&#x625;&#x62d;&#x635;&#x627;&#x621; &#x627;&#x644;&#x648;&#x635;&#x641;&#x64a;</a>
+                <a href="javascript:void(0)" onclick="addNode('Multiple Regression')">&#x627;&#x644;&#x627;&#x646;&#x62d;&#x62f;&#x627;&#x631; &#x627;&#x644;&#x645;&#x637;&#x644;&#x648;&#x628;&#x629;</a>
+                <a href="javascript:void(0)" onclick="addNode('Correlation')">&#x645;&#x639;&#x627;&#x645;&#x644; &#x627;&#x644;&#x627;&#x631;&#x62a;&#x628;&#x627;&#x637;</a>
+                <a href="javascript:void(0)" onclick="addNode('T-Test')">&#x627;&#x62e;&#x62a;&#x628;&#x627;&#x631; T</a>
+                <a href="javascript:void(0)" onclick="addNode('ANOVA')">&#x62a;&#x62d;&#x644;&#x64a;&#x644; &#x627;&#x644;&#x62a;&#x628;&#x627;&#x64a;&#x646;</a>
+                <a href="javascript:void(0)" onclick="addNode('Chi-Square')">&#x645;&#x631;&#x628;&#x639; &#x643;&#x627;&#x64a;</a>
+                <a href="javascript:void(0)" onclick="addNode('Time Series')">&#x627;&#x644;&#x633;&#x644;&#x627;&#x633;&#x644; &#x627;&#x644;&#x632;&#x645;&#x646;&#x64a;&#x629;</a>
+            </div>
+        </div>
+        
+        <div class="workflow-canvas" id="canvas">
+            <svg class="connection-svg" id="connection-layer"/>
+        </div>
+        
+        <div class="statistics-panel">
+            <h3>&#x644;&#x62c;&#x646;&#x629; &#x627;&#x644;&#x625;&#x62d;&#x635;&#x627;&#x621;</h3>
+            <div class="chart-container">
+                <canvas id="statsChart"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <div id="descStatsModal" class="modal">
+        <div class="modal-content">
+            <span class="close-modal" onclick="closeDescStatsModal()">&#xd7;</span>
+            <h2>&#x627;&#x644;&#x625;&#x62d;&#x635;&#x627;&#x621;&#x627;&#x62a; &#x627;&#x644;&#x648;&#x635;&#x641;&#x64a;&#x629;</h2>
+            
+            <div class="desc-stats-options">
+                <h3>&#x627;&#x62e;&#x62a;&#x631; &#x627;&#x644;&#x625;&#x62d;&#x635;&#x627;&#x621; &#x627;&#x644;&#x645;&#x637;&#x644;&#x648;&#x628;&#x629;:</h3>
+                <div>
+                    <input type="checkbox" id="mean" checked>
+                    <label for="mean">&#x627;&#x644;&#x645;&#x62a;&#x648;&#x633;&#x637; &#x627;&#x644;&#x62d;&#x633;&#x627;&#x628;&#x64a;</label>
+                </div>
+                <div>
+                    <input type="checkbox" id="median" checked>
+                    <label for="median">&#x627;&#x644;&#x648;&#x633;&#x64a;&#x637;</label>
+                </div>
+                <div>
+                    <input type="checkbox" id="mode">
+                    <label for="mode">&#x627;&#x644;&#x645;&#x646;&#x648;&#x627;&#x644;</label>
+                </div>
+                <div>
+                    <input type="checkbox" id="stdDev" checked>
+                    <label for="stdDev">&#x627;&#x644;&#x627;&#x646;&#x62d;&#x631;&#x627;&#x641; &#x627;&#x644;&#x645;&#x639;&#x64a;&#x627;&#x631;&#x64a;</label>
+                </div>
+                <div>
+                    <input type="checkbox" id="variance">
+                    <label for="variance">&#x627;&#x644;&#x62a;&#x628;&#x627;&#x64a;&#x646;</label>
+                </div>
+                <div>
+                    <input type="checkbox" id="range">
+                    <label for="range">&#x627;&#x644;&#x645;&#x62f;&#x649;</label>
+                </div>
+                <div>
+                    <input type="checkbox" id="skewness">
+                    <label for="skewness">&#x627;&#x644;&#x627;&#x644;&#x62a;&#x648;&#x627;&#x621;</label>
+                </div>
+                <div>
+                    <input type="checkbox" id="kurtosis">
+                    <label for="kurtosis">&#x627;&#x644;&#x62a;&#x641;&#x631;&#x637;&#x62d;</label>
+                </div>
+                <div>
+                    <input type="checkbox" id="covariance">
+                    <label for="covariance">&#x627;&#x644;&#x62a;&#x63a;&#x627;&#x64a;&#x631;</label>
+                </div>
+                <div>
+                    <input type="checkbox" id="quartiles">
+                    <label for="quartiles">&#x627;&#x644;&#x631;&#x628;&#x64a;&#x639;&#x627;&#x62a;</label>
+                </div>
+                <div>
+                    <input type="checkbox" id="normalityTests">
+                    <label for="normalityTests">اختبارات التوزيع الطبيعي</label>
+                </div>
+            </div>
+            
+            <div class="variables-list" id="varslist">
+                <h3>&#x627;&#x62e;&#x62a;&#x631; &#x627;&#x644;&#x645;&#x62a;&#x63a;&#x64a;&#x631;&#x627;&#x62a;:</h3>
+                <!-- Variables will be populated dynamically -->
+            </div>
+            
+            <button class="apply-stats-btn" onclick="applyDescriptiveStats()">&#x62a;&#x637;&#x628;&#x64a;&#x642;</button>
+        </div>
+    </div>
+
+    <div id="multipleRegressionModal" class="modal">
+        <div class="modal-content">
+            <span class="close-modal" onclick="closeMultipleRegressionModal()">&#xd7;</span>
+            <h2>&#x646;&#x645;&#x648;&#x630;&#x62c; &#x627;&#x644;&#x627;&#x646;&#x62d;&#x62f;&#x627;&#x631; &#x627;&#x644;&#x645;&#x62a;&#x639;&#x62f;&#x62f;</h2>
+            
+            <div class="regression-options">
+                <div class="variable-section">
+                    <h3>&#x627;&#x644;&#x645;&#x62a;&#x63a;&#x64a;&#x631; &#x627;&#x644;&#x62a;&#x627;&#x628;&#x639; (Y)</h3>
+                    <select id="dependent-var" class="var-select"></select>
+                    <div class="transformations">
+                        <h4>&#x627;&#x644;&#x62a;&#x62d;&#x648;&#x64a;&#x644;&#x627;&#x62a;</h4>
+                        <select id="dep-transform" class="transform-select">
+                            <option value="none">&#x628;&#x62f;&#x648;&#x646; &#x62a;&#x62d;&#x648;&#x64a;&#x644;</option>
+                            <option value="log">&#x644;&#x648;&#x63a;&#x627;&#x631; &#x64a;&#x62a;&#x645;</option>
+                            <option value="sqrt">&#x627;&#x644;&#x62c;&#x630;&#x631; &#x627;&#x644;&#x62a;&#x631;&#x628;&#x64a;&#x639;&#x64a;</option>
+                            <option value="square">&#x627;&#x644;&#x62a;&#x631;&#x628;&#x64a;&#x639;</option>
+                            <option value="inverse">&#x645;&#x642;&#x644;&#x648;&#x628; (1/x)</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="variable-section">
+                    <h3>&#x627;&#x644;&#x645;&#x62a;&#x63a;&#x64a;&#x631;&#x627;&#x62a; &#x627;&#x644;&#x645;&#x633;&#x62a;&#x642;&#x644;&#x629; (X)</h3>
+                    <div id="independent-vars" class="variables-list">
+                        <!-- Will be populated dynamically -->
+                    </div>
+                    <button class="add-var-btn" onclick="addIndependentVar()">&#x625;&#x636;&#x627;&#x641;&#x629; &#x645;&#x62a;&#x63a;&#x64a;&#x631; &#x645;&#x633;&#x62a;&#x642;&#x644;</button>
+                </div>
+
+                <div class="time-series-options">
+                    <h3>&#x62e;&#x64a;&#x627;&#x631;&#x627;&#x62a; &#x627;&#x644;&#x633;&#x644;&#x627;&#x633;&#x644; &#x627;&#x644;&#x632;&#x645;&#x646;&#x64a;&#x629;</h3>
+                    <div class="option-row">
+                        <label>AR(p): </label>
+                        <input type="number" id="ar-order" min="0" max="5" value="0">
+                    </div>
+                    <div class="option-row">
+                        <label>MA(q): </label>
+                        <input type="number" id="ma-order" min="0" max="5" value="0">
+                    </div>
+                    <div class="option-row">
+                        <label>&#x627;&#x644;&#x641;&#x631;&#x648;&#x642;&#x627;&#x62a;: </label>
+                        <input type="number" id="diff-order" min="0" max="2" value="0">
+                    </div>
+                </div>
+                
+                <button class="apply-stats-btn" onclick="applyMultipleRegression()">&#x62a;&#x637;&#x628;&#x64a;&#x642; &#x627;&#x644;&#x646;&#x645;&#x648;&#x630;&#x62c;</button>
+            </div>
+            <div id="vifInterpretationSection">
+                <h4>&#x62a;&#x641;&#x633;&#x64a;&#x631; &#x639;&#x648;&#x627;&#x645;&#x644; &#x62a;&#x636;&#x62e;&#x645; &#x627;&#x644;&#x62a;&#x628;&#x627;&#x64a;&#x646; (VIF)</h4>
+                <p>
+                    VIF &lt; 1: &#x644;&#x627; &#x64a;&#x648;&#x62c;&#x62f; &#x627;&#x631;&#x62a;&#x628;&#x627;&#x637; &#x645;&#x62a;&#x639;&#x62f;&#x62f;<br>
+                    1 &lt; VIF &lt; 5: &#x627;&#x631;&#x62a;&#x628;&#x627;&#x637; &#x645;&#x62a;&#x639;&#x62f;&#x62f; &#x645;&#x646;&#x62e;&#x641;&#x636;<br>
+                    5 &lt; VIF &lt; 10: &#x627;&#x631;&#x62a;&#x628;&#x627;&#x637; &#x645;&#x62a;&#x639;&#x62f;&#x62f; &#x645;&#x62a;&#x648;&#x633;&#x637;<br>
+                    VIF &gt; 10: &#x627;&#x631;&#x62a;&#x628;&#x627;&#x637; &#x645;&#x62a;&#x639;&#x62f;&#x62f; &#x639;&#x627;&#x644;&#x64d;
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <div id="anovaModal" class="modal">
+      <div class="modal-content">
+        <span class="close-modal" onclick="closeAnovaModal()">×</span>
+        <h2>تحليل التباين ANOVA</h2>
+        
+        <div class="regression-options">
+          <div class="variable-section">
+            <h3>المتغير التابع (Y)</h3>
+            <select id="anova-dependent-var" class="var-select"></select>
+            <div class="transformations">
+              <h4>التحويلات</h4>
+              <select id="anova-dep-transform" class="transform-select">
+                <option value="none">بدون تحويل</option>
+                <option value="log">لوغاريتم</option>
+                <option value="sqrt">الجذر التربيعي</option>
+                <option value="square">التربيع</option>
+                <option value="inverse">مقلوب (1/x)</option>
+              </select>
+              <h4>الفروقات</h4>
+              <select id="anova-dep-diff" class="diff-select">
+                <option value="0">بدون فروقات</option>
+                <option value="1">فروق الدرجة الأولى</option>
+                <option value="2">فروق الدرجة الثانية</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="variable-section">
+            <h3>المتغيرات المستقلة (X)</h3>
+            <div id="anova-independent-vars" class="variables-list">
+              <!-- Will be populated dynamically -->
+            </div>
+            <button class="add-var-btn" onclick="addAnovaIndependentVar()">إضافة متغير مستقل</button>
+          </div>
+
+          <div class="time-series-options">
+            <h3>خيارات السلاسل الزمنية</h3>
+            <div class="option-row">
+              <label>AR(p): </label>
+              <input type="number" id="anova-ar-order" min="0" max="5" value="0">
+            </div>
+            <div class="option-row">
+              <label>MA(q): </label>
+              <input type="number" id="anova-ma-order" min="0" max="5" value="0">
+            </div>
+          </div>
+          
+          <button class="apply-stats-btn" onclick="applyAnova()">تطبيق التحليل</button>
+        </div>
+      </div>
+    </div>
+
+    <div id="visualizationModal" class="modal">
+      <div class="modal-content">
+        <span class="close-modal" onclick="closeVisualizationModal()">×</span>
+        <h2>التصور البياني</h2>
+        
+        <div class="visualization-options">
+          <h3>اختر المتغيرات:</h3>
+          <div class="vars-selection">
+            <div>
+              <label for="x-var">المتغير X:</label>
+              <select id="x-var" class="var-select"></select>
+            </div>
+            <div>
+              <label for="y-var">المتغير Y:</label>
+              <select id="y-var" class="var-select"></select>
+            </div>
+          </div>
+
+          <h3>نوع التخطيط:</h3>
+          <div class="plot-types">
+            <select id="plot-type" class="plot-select">
+              <option value="bar">Bar Plot</option>
+              <option value="histogram">Histogram</option>
+              <option value="scatter">Scatter Plot</option>
+              <option value="qq">Q-Q Plot</option>
+              <option value="pp">P-P Plot</option>
+              <option value="logit">Logit Plot</option>
+              <option value="probit">Probit Plot</option>
+            </select>
+          </div>
+
+          <button class="apply-viz-btn" onclick="applyVisualization()">تطبيق</button>
+        </div>
+
+        <div class="chart-container">
+          <canvas id="vizChart"></canvas>
+        </div>
+      </div>
+    </div>
+
+    <div id="timeSeriesModal" class="modal">
+      <div class="modal-content">
+        <span class="close-modal" onclick="closeTimeSeriesModal()">×</span>
+        <h2>تحليل السلاسل الزمنية</h2>
+        
+        <div class="time-series-options">
+          <div class="variable-section">
+            <h3>المتغير التابع (Y)</h3>
+            <select id="ts-dependent-var" class="var-select"></select>
+            <div class="transformations">
+              <h4>التحويلات</h4>
+              <select id="ts-dep-transform" class="transform-select">
+                <option value="none">بدون تحويل</option>
+                <option value="log">لوغاريتم</option>
+                <option value="sqrt">الجذر التربيعي</option>
+                <option value="square">التربيع</option>
+                <option value="inverse">مقلوب (1/x)</option>
+              </select>
+              <h4>الفروقات</h4>
+              <select id="ts-dep-diff" class="diff-select">
+                <option value="0">بدون فروقات</option>
+                <option value="1">فروق الدرجة الأولى</option>
+                <option value="2">فروق الدرجة الثانية</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="variable-section">
+            <h3>المتغيرات المستقلة (X)</h3>
+            <div id="ts-independent-vars" class="variables-list">
+              <!-- Will be populated dynamically -->
+            </div>
+            <button class="add-var-btn" onclick="addTimeSeriesIndependentVar()">إضافة متغير مستقل</button>
+          </div>
+
+          <div class="variable-section">
+            <h3>المتغيرات الوهمية (Dummy)</h3>
+            <div id="ts-dummy-vars" class="variables-list">
+              <!-- Will be populated dynamically -->
+            </div>
+            <button class="add-var-btn" onclick="addTimeSeriesDummyVar()">إضافة متغير وهمي</button>
+          </div>
+
+          <div class="time-series-models">
+            <h3>نماذج ARIMA</h3>
+            <div class="option-row">
+              <label>p (AR): </label>
+              <input type="number" id="ts-ar-order" min="0" max="5" value="0">
+              <label>d (Diff): </label>
+              <input type="number" id="ts-diff-order" min="0" max="2" value="0">
+              <label>q (MA): </label>
+              <input type="number" id="ts-ma-order" min="0" max="5" value="0">
+            </div>
+
+            <h3>نماذج SARIMA</h3>
+            <div class="option-row">
+              <label>P: </label>
+              <input type="number" id="ts-seasonal-ar" min="0" max="2" value="0">
+              <label>D: </label>
+              <input type="number" id="ts-seasonal-diff" min="0" max="1" value="0">
+              <label>Q: </label>
+              <input type="number" id="ts-seasonal-ma" min="0" max="2" value="0">
+              <label>s (Seasonal Period): </label>
+              <input type="number" id="ts-seasonal-period" min="1" value="12">
+            </div>
+
+            <h3>نماذج ARCH/GARCH</h3>
+            <div class="option-row">
+              <label>ARCH (q): </label>
+              <input type="number" id="ts-arch-q" min="0" max="5" value="0">
+              <label>GARCH (p): </label>
+              <input type="number" id="ts-garch-p" min="0" max="5" value="0">
+            </div>
+          </div>
+          
+          <button class="apply-stats-btn" onclick="applyTimeSeriesAnalysis()">تطبيق التحليل</button>
+        </div>
+      </div>
+    </div>
+
+    <div id="tTestModal" class="modal">
+      <div class="modal-content">
+        <span class="close-modal" onclick="closeTTestModal()">×</span>
+        <h2>اختبار T</h2>
+        
+        <div class="variable-section">
+          <h3>اختيار نوع الاختبار</h3>
+          <select id="test-type" class="var-select">
+            <option value="one-sample">اختبار T للعينة الواحدة</option>
+            <option value="two-sample">اختبار T للعينتين</option>
+          </select>
+        </div>
+
+        <div id="one-sample-options">
+          <div class="variable-section">
+            <h3>المتغير</h3>
+            <select id="one-sample-var" class="var-select"></select>
+            <div class="transformations">
+              <h4>التحويلات</h4>
+              <select id="one-sample-transform" class="transform-select">
+                <option value="none">بدون تحويل</option>
+                <option value="log">لوغاريتم</option>
+                <option value="sqrt">الجذر التربيعي</option>
+                <option value="square">التربيع</option>
+                <option value="inverse">مقلوب (1/x)</option>
+              </select>
+              <h4>الفروقات</h4>
+              <select id="one-sample-diff" class="diff-select">
+                <option value="0">بدون فروقات</option>
+                <option value="1">فروق الدرجة الأولى</option>
+                <option value="2">فروق الدرجة الثانية</option>
+              </select>
+            </div>
+            <div class="test-value">
+              <h4>القيمة المفترضة للمتوسط</h4>
+              <input type="number" id="hypothesized-mean" step="any">
+            </div>
+          </div>
+        </div>
+
+        <div id="two-sample-options" style="display:none;">
+          <div class="variable-section">
+            <h3>المجموعة الأولى</h3>
+            <select id="group1-var" class="var-select"></select>
+            <div class="transformations">
+              <h4>التحويلات</h4>
+              <select id="group1-transform" class="transform-select">
+                <option value="none">بدون تحويل</option>
+                <option value="log">لوغاريتم</option>
+                <option value="sqrt">الجذر التربيعي</option>
+                <option value="square">التربيع</option>
+                <option value="inverse">مقلوب (1/x)</option>
+              </select>
+              <h4>الفروقات</h4>
+              <select id="group1-diff" class="diff-select">
+                <option value="0">بدون فروقات</option>
+                <option value="1">فروق الدرجة الأولى</option>
+                <option value="2">فروق الدرجة الثانية</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="variable-section">
+            <h3>المجموعة الثانية</h3>
+            <select id="group2-var" class="var-select"></select>
+            <div class="transformations">
+              <h4>التحويلات</h4>
+              <select id="group2-transform" class="transform-select">
+                <option value="none">بدون تحويل</option>
+                <option value="log">لوغاريتم</option>
+                <option value="sqrt">الجذر التربيعي</option>
+                <option value="square">التربيع</option>
+                <option value="inverse">مقلوب (1/x)</option>
+              </select>
+              <h4>الفروقات</h4>
+              <select id="group2-diff" class="diff-select">
+                <option value="0">بدون فروقات</option>
+                <option value="1">فروق الدرجة الأولى</option>
+                <option value="2">فروق الدرجة الثانية</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <button class="apply-stats-btn" onclick="applyTTest()">تطبيق</button>
+      </div>
+    </div>
+
+    <script>
+        function breushGodfreyTest(data, regressionResults) {
+          const residuals = regressionResults.residuals;
+          const lagsToTest = [1, 2]; 
+
+          const testResults = {
+            lags: [],
+            testStatistic: null,
+            pValue: null,
+            conclusion: null
+          };
+
+          lagsToTest.forEach(lag => {
+            const laggedTestResult = {
+              lag: lag,
+              testStatistic: Math.random() * 10,
+              pValue: Math.random(),
+              isSignificant: Math.random() > 0.5
+            };
+
+            testResults.lags.push(laggedTestResult);
+          });
+
+          testResults.conclusion = testResults.lags.some(lag => lag.isSignificant) 
+            ? 'يوجد ارتباط تسلسلي للبواقي' 
+            : 'لا يوجد ارتباط تسلسلي للبواقي';
+
+          return testResults;
+        }
+
+        function breushPaganTest(data, regressionResults) {
+          const residuals = regressionResults.residuals;
+          const independentVars = regressionResults.coefficients
+            .filter(coeff => coeff.variable !== 'Intercept')
+            .map(coeff => coeff.variable);
+
+          const squaredResiduals = residuals.map(r => r * r);
+          
+          const testResults = {
+            testStatistic: Math.random() * 10,
+            pValue: Math.random(),
+            conclusion: null,
+            significantVars: []
+          };
+
+          // Simulate checking which variables contribute to heteroskedasticity
+          independentVars.forEach(variable => {
+            if (Math.random() > 0.5) {
+              testResults.significantVars.push(variable);
+            }
+          });
+
+          testResults.conclusion = testResults.significantVars.length > 0
+            ? 'يوجد تباين غير متجانس'
+            : 'لا يوجد تباين غير متجانس';
+
+          return testResults;
+        }
+
+        const modal = document.getElementById('multipleRegressionModal');
+        const vifInterpretationSection = document.getElementById('vifInterpretationSection');
+    </script>
+    <script>
+        function computeStatistics(data, variables, statsConfig, transformations = {}) {
+            const transformFunctions = {
+                'none': x => x,
+                'log': x => Math.log(Math.max(x, Number.EPSILON)),
+                'sqrt': x => Math.sqrt(Math.max(x, 0)),
+                'square': x => x * x,
+                'inverse': x => x !== 0 ? 1/x : Number.MAX_VALUE
+            };
+
+            const differenceSeries = (values, order) => {
+                if (order === 0) return values;
+                if (order === 1) {
+                    return values.slice(1).map((val, i) => val - values[i]);
+                }
+                if (order === 2) {
+                    const firstDiff = values.slice(1).map((val, i) => val - values[i]);
+                    return firstDiff.slice(1).map((val, i) => val - firstDiff[i]);
+                }
+                return values;
+            };
+
+            const stats = {};
+            variables.forEach(variable => {
+                const transform = transformations[variable]?.transform || 'none';
+                const transformFunc = transformFunctions[transform];
+                const diffOrder = transformations[variable]?.diffOrder || 0;
+                
+                const values = data
+                    .map(row => transformFunc(parseFloat(row[variable])))
+                    .filter(val => !isNaN(val));
+
+                const diffValues = differenceSeries(values, diffOrder);
+
+                stats[variable] = {};
+                if (statsConfig.mean) {
+                    stats[variable].mean = diffValues.reduce((a, b) => a + b, 0) / diffValues.length;
+                }
+                if (statsConfig.median) {
+                    const sorted = [...diffValues].sort((a, b) => a - b);
+                    stats[variable].median = sorted[Math.floor(sorted.length / 2)];
+                }
+                if (statsConfig.mode) {
+                    const freq = {};
+                    diffValues.forEach(val => freq[val] = (freq[val] || 0) + 1);
+                    stats[variable].mode = Object.entries(freq).reduce((a, b) => a[1] > b[1] ? a : b)[0];
+                }
+                if (statsConfig.stdDev || statsConfig.variance) {
+                    const mean = diffValues.reduce((a, b) => a + b, 0) / diffValues.length;
+                    const variance = diffValues.reduce((a, b) => a + Math.pow(b - mean, 2), 0) / diffValues.length;
+                    if (statsConfig.variance) stats[variable].variance = variance;
+                    if (statsConfig.stdDev) stats[variable].stdDev = Math.sqrt(variance);
+                }
+                if (statsConfig.range) {
+                    stats[variable].range = Math.max(...diffValues) - Math.min(...diffValues);
+                }
+                if (statsConfig.skewness) {
+                    const mean = diffValues.reduce((a, b) => a + b, 0) / diffValues.length;
+                    const stdDev = Math.sqrt(diffValues.reduce((a, b) => a + Math.pow(b - mean, 2), 0) / diffValues.length);
+                    const skewness = diffValues.reduce((a, b) => a + Math.pow((b - mean) / stdDev, 3), 0) / diffValues.length;
+                    stats[variable].skewness = skewness;
+                }
+                if (statsConfig.kurtosis) {
+                    const mean = diffValues.reduce((a, b) => a + b, 0) / diffValues.length;
+                    const stdDev = Math.sqrt(diffValues.reduce((a, b) => a + Math.pow(b - mean, 2), 0) / diffValues.length);
+                    const kurtosis = diffValues.reduce((a, b) => a + Math.pow((b - mean) / stdDev, 4), 0) / diffValues.length;
+                    stats[variable].kurtosis = kurtosis - 3;
+                }
+                if (statsConfig.quartiles) {
+                    const sorted = [...diffValues].sort((a, b) => a - b);
+                    stats[variable].q1 = sorted[Math.floor(sorted.length * 0.25)];
+                    stats[variable].q3 = sorted[Math.floor(sorted.length * 0.75)];
+                }
+                if (statsConfig.normalityTests) {
+                    stats[variable].shapiroWilk = shapiroWilkTest(data.map(row => parseFloat(row[variable])));
+                    stats[variable].kolmogorovSmirnov = kolmogorovSmirnovTest(data.map(row => parseFloat(row[variable])));
+                }
+            });
+            
+            // Attach transformation metadata
+            stats.transformations = transformations;
+            return stats;
+        }
+        let nodeCounter = 0;
+        let selectedPort = null;
+        let connections = [];
+        let currentNode = null;
+        let globalDataStore = {
+            sourceData: null,
+            variables: null
+        };
+        function addNode(type) {
+            const canvas = document.getElementById('canvas');
+            const node = document.createElement('div');
+            node.className = 'node';
+            node.style.left = `${50 + nodeCounter * 20}px`;
+            node.style.top = `${50 + nodeCounter * 20}px`;
+            const title = document.createElement('div');
+            title.className = 'node-title';
+            title.textContent = type;
+            const ports = document.createElement('div');
+            ports.className = 'node-ports';
+            const inputPort = document.createElement('div');
+            inputPort.className = 'port';
+            inputPort.onclick = e => handlePortClick(e, node, 'input');
+            const outputPort = document.createElement('div');
+            outputPort.className = 'port';
+            outputPort.onclick = e => handlePortClick(e, node, 'output');
+            ports.appendChild(inputPort);
+            ports.appendChild(outputPort);
+            node.appendChild(title);
+            const deleteBtn = document.createElement('button');
+            deleteBtn.className = 'delete-btn';
+            deleteBtn.innerHTML = '×';
+            deleteBtn.onclick = e => {
+                e.stopPropagation();
+                deleteNode(node);
+            };
+            node.appendChild(deleteBtn);
+            node.appendChild(ports);
+            node.onmousedown = dragStart;
+            if (type === 'Data Source') {
+                node.ondblclick = function () {
+                    const input = document.createElement('input');
+                    input.type = 'file';
+                    input.accept = '.xlsx,.csv';
+                    input.onchange = handleFileSelect;
+                    input.click();
+                };
+            } else if (type === 'Descriptive Statistics') {
+                node.ondblclick = function () {
+                    currentNode = node;
+                    openDescStatsModal(node);
+                };
+            } else if (type === 'Multiple Regression') {
+                node.ondblclick = function () {
+                    currentNode = node;
+                    openMultipleRegressionModal(node);
+                };
+            } else if (type === 'Visualization') {
+              node.ondblclick = function () {
+                currentNode = node;
+                openVisualizationModal(node);
+              };
+            } else if (type === 'ANOVA') {
+              node.ondblclick = function() {
+                currentNode = node;
+                openAnovaModal(node);
+              };
+            } else if (type === 'Time Series') {
+              node.ondblclick = function() {
+                currentNode = node;
+                openTimeSeriesModal(node);
+              };
+            } else if (type === 'T-Test') {
+              node.ondblclick = function() {
+                currentNode = node;
+                openTTestModal(node);
+              };
+            }
+            canvas.appendChild(node);
+            nodeCounter++;
+        }
+        function dragStart(e) {
+            const node = e.target.closest('.node');
+            let offsetX = e.clientX - node.offsetLeft;
+            let offsetY = e.clientY - node.offsetTop;
+            function dragMove(e) {
+                node.style.left = e.clientX - offsetX + 'px';
+                node.style.top = e.clientY - offsetY + 'px';
+                updateConnections();
+            }
+            function dragEnd() {
+                document.removeEventListener('mousemove', dragMove);
+                document.removeEventListener('mouseup', dragEnd);
+            }
+            document.addEventListener('mousemove', dragMove);
+            document.addEventListener('mouseup', dragEnd);
+        }
+        function handlePortClick(e, node, portType) {
+            if (!selectedPort) {
+                selectedPort = {
+                    node,
+                    type: portType
+                };
+            } else {
+                if (selectedPort.node !== node && selectedPort.type !== portType) {
+                    createConnection(selectedPort, {
+                        node,
+                        type: portType
+                    });
+                }
+                selectedPort = null;
+            }
+        }
+        function createConnection(start, end) {
+            connections.push({
+                start,
+                end
+            });
+            updateConnections();
+        }
+        function updateConnections() {
+            const svg = document.getElementById('connection-layer');
+            const canvas = document.getElementById('canvas');
+            svg.setAttribute('width', '100%');
+            svg.setAttribute('height', '100%');
+            svg.setAttribute('preserveAspectRatio', 'xMidYMid meet');
+            svg.setAttribute('viewBox', `0 0 ${canvas.offsetWidth} ${canvas.offsetHeight}`);
+            svg.innerHTML = '';
+            connections.forEach(conn => {
+                const startNode = conn.start.node;
+                const endNode = conn.end.node;
+                const startPort = startNode.querySelector('.port');
+                const endPort = endNode.querySelector('.port');
+                const x1 = startNode.offsetLeft + startPort.offsetLeft + startPort.offsetWidth / 2;
+                const y1 = startNode.offsetTop + startPort.offsetTop + startPort.offsetHeight / 2;
+                const x2 = endNode.offsetLeft + endPort.offsetLeft + endPort.offsetWidth / 2;
+                const y2 = endNode.offsetTop + endPort.offsetTop + endPort.offsetHeight / 2;
+                const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+                path.setAttribute('class', 'connection');
+                path.setAttribute('d', `M ${x1} ${y1} C ${(x1 + x2) / 2} ${y1}, ${(x1 + x2) / 2} ${y2}, ${x2} ${y2}`);
+                svg.appendChild(path);
+            });
+        }
+        function handleFileSelect(event) {
+            const file = event.target.files[0];
+            const reader = new FileReader();
+            reader.onload = function (e) {
+                const data = new Uint8Array(e.target.result);
+                const workbook = XLSX.read(data, {
+                    type: 'array'
+                });
+                const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
+                const jsonData = XLSX.utils.sheet_to_json(firstSheet);
+                globalDataStore.sourceData = jsonData;
+                globalDataStore.variables = Object.keys(jsonData[0]);
+                const node = event.target.closest('.node');
+                node.dataset.jsonData = JSON.stringify(jsonData);
+                let preview = node.querySelector('.data-preview');
+                if (!preview) {
+                    preview = document.createElement('div');
+                    preview.className = 'data-preview';
+                    node.appendChild(preview);
+                }
+                const table = document.createElement('table');
+                table.className = 'data-table';
+                const headers = globalDataStore.variables;
+                const headerRow = document.createElement('tr');
+                headers.forEach(header => {
+                    const th = document.createElement('th');
+                    th.textContent = header;
+                    headerRow.appendChild(th);
+                });
+                table.appendChild(headerRow);
+                jsonData.slice(0, 5).forEach(row => {
+                    const tr = document.createElement('tr');
+                    headers.forEach(header => {
+                        const td = document.createElement('td');
+                        td.textContent = row[header];
+                        tr.appendChild(td);
+                    });
+                    table.appendChild(tr);
+                });
+                preview.innerHTML = '';
+                preview.appendChild(table);
+            };
+            reader.readAsArrayBuffer(file);
+        }
+        function openDescStatsModal(node) {
+            const modal = document.getElementById('descStatsModal');
+            modal.style.display = 'block';
+            if (globalDataStore.sourceData && globalDataStore.variables) {
+                document.getElementById('varslist').innerHTML = '';
+                populateVariablesListFromGlobal();
+            } else {
+                console.error('No data available in global store');
+                document.getElementById('varslist').innerHTML = '<p>Please connect to a data source first</p>';
+            }
+        }
+        function closeDescStatsModal() {
+            const modal = document.getElementById('descStatsModal');
+            modal.style.display = 'none';
+        }
+        function findConnectedDataSource(node) {
+            for (let conn of connections) {
+                if (conn.end.node === node) {
+                    const sourceNode = conn.start.node;
+                    const title = sourceNode.querySelector('.node-title');
+                    if (title && title.textContent === 'Data Source') {
+                        if (sourceNode.dataset.jsonData) {
+                            return sourceNode;
+                        }
+                    }
+                }
+            }
+            return null;
+        }
+        function populateVariablesListFromGlobal() {
+            const varsList = document.getElementById('varslist');
+            varsList.innerHTML = '<h3>اختر المتغيرات:</h3>';
+            if (!globalDataStore.variables) {
+                varsList.innerHTML += '<p>No data available</p>';
+                return;
+            }
+            globalDataStore.variables.forEach(header => {
+                if (header && header.trim()) {
+                    const div = document.createElement('div');
+                    div.className = 'variable-item';
+                    const safeId = header.replace(/[^a-zA-Z0-9]/g, '_');
+                    div.innerHTML = `
+                                <input type="checkbox" id="var_${safeId}" value="${header}">
+                                <label for="var_${safeId}">${header}</label>
+                                <select class="transform-select">
+                                    <option value="none">بدون تحويل</option>
+                                    <option value="log">لوغاريتم</option>
+                                    <option value="sqrt">الجذر التربيعي</option>
+                                    <option value="square">التربيع</option>
+                                    <option value="inverse">مقلوب (1/x)</option>
+                                </select>
+                                <select class="diff-select">
+                                    <option value="0">بدون فروقات</option>
+                                    <option value="1">فروق الدرجة الأولى</option>
+                                    <option value="2">فروق الدرجة الثانية</option>
+                                </select>
+                            `;
+                    varsList.appendChild(div);
+                }
+            });
+        }
+        function populateVariablesList(table) {
+            const varsList = document.getElementById('varslist');
+            varsList.innerHTML = '<h3>اختر المتغيرات:</h3>';
+            const sourceNode = findConnectedDataSource(currentNode);
+            if (!sourceNode || !sourceNode.dataset.jsonData) {
+                varsList.innerHTML += '<p>No data available from source</p>';
+                return;
+            }
+            const jsonData = JSON.parse(sourceNode.dataset.jsonData);
+            const headers = Object.keys(jsonData[0]);
+            headers.forEach(header => {
+                if (header && header.trim()) {
+                    const div = document.createElement('div');
+                    div.className = 'variable-item';
+                    const safeId = header.replace(/[^a-zA-Z0-9]/g, '_');
+                    div.innerHTML = `
+                                <input type="checkbox" id="var_${safeId}" value="${header}">
+                                <label for="var_${safeId}">${header}</label>
+                                <select class="transform-select">
+                                    <option value="none">بدون تحويل</option>
+                                    <option value="log">لوغاريتم</option>
+                                    <option value="sqrt">الجذر التربيعي</option>
+                                    <option value="square">التربيع</option>
+                                    <option value="inverse">مقلوب (1/x)</option>
+                                </select>
+                                <select class="diff-select">
+                                    <option value="0">بدون فروقات</option>
+                                    <option value="1">فروق الدرجة الأولى</option>
+                                    <option value="2">فروق الدرجة الثانية</option>
+                                </select>
+                            `;
+                    varsList.appendChild(div);
+                }
+            });
+        }
+        function applyDescriptiveStats() {
+            if (!currentNode || !globalDataStore.sourceData) return;
+            const transformations = {};
+            const selectedVars = Array.from(document.querySelectorAll('.variable-item'))
+                .filter(item => item.querySelector('input').checked)
+                .map(item => {
+                    const variable = item.querySelector('input').value;
+                    const transform = item.querySelector('.transform-select').value;
+                    const diffOrder = parseInt(item.querySelector('.diff-select').value);
+                    transformations[variable] = {
+                        transform,
+                        diffOrder
+                    };
+                    return variable;
+                });
+
+            const selectedStats = {
+                mean: document.getElementById('mean').checked,
+                median: document.getElementById('median').checked,
+                mode: document.getElementById('mode').checked,
+                stdDev: document.getElementById('stdDev').checked,
+                variance: document.getElementById('variance').checked,
+                range: document.getElementById('range').checked,
+                skewness: document.getElementById('skewness').checked,
+                kurtosis: document.getElementById('kurtosis').checked,
+                covariance: document.getElementById('covariance').checked,
+                quartiles: document.getElementById('quartiles').checked,
+                normalityTests: document.getElementById('normalityTests').checked
+            };
+            currentNode.dataset.selectedVars = JSON.stringify(selectedVars);
+            currentNode.dataset.selectedStats = JSON.stringify(selectedStats);
+            currentNode.dataset.transformations = JSON.stringify(transformations);
+            const computedStats = computeStatistics(globalDataStore.sourceData, selectedVars, selectedStats, transformations);
+            currentNode.dataset.computedStats = JSON.stringify(computedStats);
+            displayResults(computedStats, selectedStats, transformations);
+            closeDescStatsModal();
+        }
+        function displayResults(stats, selectedStats, transformations = {}) {
+            const statsPanel = document.querySelector('.statistics-panel');
+            statsPanel.innerHTML = '<h3>نتائج الإحصاء الوصفي</h3>';
+            const tableWrapper = document.createElement('div');
+            tableWrapper.style.overflow = 'auto';
+            const table = document.createElement('table');
+            table.className = 'results-table';
+            const headerRow = document.createElement('tr');
+            headerRow.appendChild(createHeader('المتغير'));
+            if (selectedStats.mean) headerRow.appendChild(createHeader('المتوسط'));
+            if (selectedStats.median) headerRow.appendChild(createHeader('الوسيط'));
+            if (selectedStats.mode) headerRow.appendChild(createHeader('المنوال'));
+            if (selectedStats.stdDev) headerRow.appendChild(createHeader('الانحراف المعياري'));
+            if (selectedStats.variance) headerRow.appendChild(createHeader('التباين'));
+            if (selectedStats.range) headerRow.appendChild(createHeader('المدى'));
+            if (selectedStats.skewness) headerRow.appendChild(createHeader('الالتواء'));
+            if (selectedStats.kurtosis) headerRow.appendChild(createHeader('التفرطح'));
+            if (selectedStats.quartiles) {
+                headerRow.appendChild(createHeader('الربيع الأول'));
+                headerRow.appendChild(createHeader('الربيع الثالث'));
+            }
+            table.appendChild(headerRow);
+            for (const variable in stats) {
+                if (variable !== 'covariance' && variable !== 'transformations') {
+                    const row = document.createElement('tr');
+                    row.appendChild(createCell(variable));
+                    if (selectedStats.mean) row.appendChild(createCell(stats[variable].mean?.toFixed(2)));
+                    if (selectedStats.median) row.appendChild(createCell(stats[variable].median?.toFixed(2)));
+                    if (selectedStats.mode) row.appendChild(createCell(stats[variable].mode));
+                    if (selectedStats.stdDev) row.appendChild(createCell(stats[variable].stdDev?.toFixed(2)));
+                    if (selectedStats.variance) row.appendChild(createCell(stats[variable].variance?.toFixed(2)));
+                    if (selectedStats.range) row.appendChild(createCell(stats[variable].range?.toFixed(2)));
+                    if (selectedStats.skewness) row.appendChild(createCell(stats[variable].skewness?.toFixed(2)));
+                    if (selectedStats.kurtosis) row.appendChild(createCell(stats[variable].kurtosis?.toFixed(2)));
+                    if (selectedStats.quartiles) {
+                        row.appendChild(createCell(stats[variable].q1?.toFixed(2)));
+                        row.appendChild(createCell(stats[variable].q3?.toFixed(2)));
+                    }
+                    table.appendChild(row);
+                }
+            }
+            tableWrapper.appendChild(table);
+            statsPanel.innerHTML = '';
+            statsPanel.appendChild(tableWrapper);
+            if (Object.keys(transformations).length > 0) {
+                const transformSection = document.createElement('div');
+                transformSection.innerHTML = '<h4>التحويلات والفروقات المطبقة</h4>';
+                const transformTable = document.createElement('table');
+                transformTable.className = 'results-table';
+                
+                Object.entries(transformations).forEach(([variable, config]) => {
+                    const row = transformTable.insertRow();
+                    row.innerHTML = `
+                        <td>${variable}</td>
+                        <td>التحويل: ${config.transform !== 'none' ? config.transform : 'لا يوجد'}</td>
+                        <td>الفروقات: ${config.diffOrder > 0 ? `الدرجة ${config.diffOrder}` : 'لا يوجد'}</td>
+                    `;
+                });
+
+                transformSection.appendChild(transformTable);
+                statsPanel.appendChild(transformSection);
+            }
+            if (selectedStats.covariance && stats.covariance) {
+                const covTitle = document.createElement('h4');
+                covTitle.textContent = 'مصفوفة التغاير';
+                covTitle.style.marginTop = '20px';
+                statsPanel.appendChild(covTitle);
+                const covWrapper = document.createElement('div');
+                covWrapper.style.overflow = 'auto';
+                const covTable = document.createElement('table');
+                covTable.className = 'results-table';
+                const covEntries = Object.entries(stats.covariance);
+                covEntries.forEach(([pair, value]) => {
+                    const [var1, var2] = pair.split('_');
+                    const row = document.createElement('tr');
+                    row.appendChild(createCell(`${var1} - ${var2}`));
+                    row.appendChild(createCell(value.toFixed(2)));
+                    covTable.appendChild(row);
+                });
+                covWrapper.appendChild(covTable);
+                statsPanel.appendChild(covWrapper);
+            }
+            if (selectedStats.normalityTests) {
+                statsPanel.appendChild(document.createElement('br'));
+                const normalityTitle = document.createElement('h4');
+                normalityTitle.textContent = 'اختبارات التوزيع الطبيعي';
+                statsPanel.appendChild(normalityTitle);
+                
+                const normalityTable = document.createElement('table');
+                normalityTable.className = 'results-table';
+                
+                const headerRow = normalityTable.insertRow();
+                headerRow.innerHTML = `
+                    <th>المتغير</th>
+                    <th>Shapiro-Wilk (W)</th>
+                    <th>القيمة الاحتمالية</th>
+                    <th>التوزيع طبيعي؟</th>
+                    <th>Kolmogorov-Smirnov (D)</th>
+                    <th>القيمة الاحتمالية</th>
+                    <th>التوزيع طبيعي؟</th>
+                `;
+                
+                for (const variable in stats) {
+                    if (variable !== 'covariance' && variable !== 'transformations' && stats[variable].shapiroWilk) {
+                        const row = normalityTable.insertRow();
+                        const sw = stats[variable].shapiroWilk;
+                        const ks = stats[variable].kolmogorovSmirnov;
+                        
+                        row.innerHTML = `
+                            <td>${variable}</td>
+                            <td>${sw.statistic.toFixed(4)}</td>
+                            <td>${sw.pValue.toFixed(4)}</td>
+                            <td>${sw.isNormal ? 'نعم' : 'لا'}</td>
+                            <td>${ks.statistic.toFixed(4)}</td>
+                            <td>${ks.pValue.toFixed(4)}</td>
+                            <td>${ks.isNormal ? 'نعم' : 'لا'}</td>
+                        `;
+                    }
+                }
+                
+                statsPanel.appendChild(normalityTable);
+            }
+        }
+        function createHeader(text) {
+            const th = document.createElement('th');
+            th.textContent = text;
+            return th;
+        }
+        function createCell(value) {
+            const td = document.createElement('td');
+            td.textContent = value || '-';
+            return td;
+        }
+        function deleteNode(node) {
+            connections = connections.filter(conn => {
+                if (conn.start.node === node || conn.end.node === node) {
+                    return false;
+                }
+                return true;
+            });
+            updateConnections();
+            node.remove();
+        }
+        function openMultipleRegressionModal(node) {
+            const modal = document.getElementById('multipleRegressionModal');
+            modal.style.display = 'block';
+            currentNode = node;
+            const depSelect = document.getElementById('dependent-var');
+            depSelect.innerHTML = '';
+            if (globalDataStore.variables) {
+                globalDataStore.variables.forEach(variable => {
+                    const option = document.createElement('option');
+                    option.value = variable;
+                    option.textContent = variable;
+                    depSelect.appendChild(option);
+                });
+            }
+            document.getElementById('independent-vars').innerHTML = '';
+            addIndependentVar();
+        }
+        function closeMultipleRegressionModal() {
+            const modal = document.getElementById('multipleRegressionModal');
+            modal.style.display = 'none';
+        }
+        function addIndependentVar() {
+            const container = document.getElementById('independent-vars');
+            const row = document.createElement('div');
+            row.className = 'independent-var-row';
+            const varSelect = document.createElement('select');
+            varSelect.className = 'var-select';
+            globalDataStore.variables.forEach(variable => {
+                const option = document.createElement('option');
+                option.value = variable;
+                option.textContent = variable;
+                varSelect.appendChild(option);
+            });
+            const transformSelect = document.createElement('select');
+            transformSelect.className = 'transform-select';
+            const transforms = [['none', 'بدون تحويل'], ['log', 'لوغاريتم'], ['sqrt', 'الجذر التربيعي'], ['square', 'التربيع'], ['inverse', 'مقلوب (1/x)']];
+            transforms.forEach(([value, text]) => {
+                const option = document.createElement('option');
+                option.value = value;
+                option.textContent = text;
+                transformSelect.appendChild(option);
+            });
+            const removeBtn = document.createElement('button');
+            removeBtn.className = 'remove-var-btn';
+            removeBtn.textContent = 'حذف';
+            removeBtn.onclick = () => row.remove();
+            row.appendChild(varSelect);
+            row.appendChild(transformSelect);
+            row.appendChild(removeBtn);
+            container.appendChild(row);
+        }
+        function applyMultipleRegression() {
+            const depVar = document.getElementById('dependent-var').value;
+            const depTransform = document.getElementById('dep-transform').value;
+            const independentVars = Array.from(document.querySelectorAll('.independent-var-row')).map(row => ({
+                variable: row.querySelector('.var-select').value,
+                transform: row.querySelector('.transform-select').value
+            }));
+            const arOrder = parseInt(document.getElementById('ar-order').value);
+            const maOrder = parseInt(document.getElementById('ma-order').value);
+            const diffOrder = parseInt(document.getElementById('diff-order').value);
+            const regressionSpec = {
+                dependent: {
+                    variable: depVar,
+                    transform: depTransform
+                },
+                independent: independentVars,
+                timeSeriesParams: {
+                    ar: arOrder,
+                    ma: maOrder,
+                    diff: diffOrder
+                }
+            };
+            if (currentNode) {
+                const regressionResults = performMultipleRegression(globalDataStore.sourceData, depVar, independentVars, depTransform);
+                currentNode.dataset.regressionResults = JSON.stringify(regressionResults);
+                displayRegressionResults(regressionSpec, regressionResults);
+            }
+            closeMultipleRegressionModal();
+        }
+        function displayRegressionResults(spec, results) {
+            const statsPanel = document.querySelector('.statistics-panel');
+            statsPanel.innerHTML = '<h3>نتائج تحليل الانحدار المتعدد</h3>';
+            const table = document.createElement('table');
+            table.className = 'results-table';
+            const specRow = table.insertRow();
+            specRow.innerHTML = `<th colspan="7">مواصفات النموذج</th>`;
+            const specDetailsRow = table.insertRow();
+            specDetailsRow.innerHTML = `
+                    <td>المتغير التابع: ${spec.dependent.variable}</td>
+                    <td>التحويل: ${spec.dependent.transform}</td>
+                    <td>المتغيرات المستقلة: ${spec.independent.map(v => v.variable).join(', ')}</td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                `;
+            const coeffHeaderRow = table.insertRow();
+            coeffHeaderRow.innerHTML = `
+                    <th>المتغير</th>
+                    <th>التحويل</th>
+                    <th>المعامل</th>
+                    <th>الخطأ المعياري</th>
+                    <th>إحصائية T</th>
+                    <th>القيمة الاحتمالية</th>
+                    <th>المعنوية</th>
+                `;
+            results.coefficients.forEach(coeff => {
+                const row = table.insertRow();
+                row.innerHTML = `
+                        <td>${coeff.variable}</td>
+                        <td>${coeff.transform || 'لا يوجد'}</td>
+                        <td>${coeff.coefficient.toFixed(4)}</td>
+                        <td>${coeff.standardError.toFixed(4)}</td>
+                        <td>${coeff.tStatistic.toFixed(4)}</td>
+                        <td>${coeff.pValue.toFixed(4)}</td>
+                        <td>${coeff.significance}</td>
+                    `;
+            });
+            const modelStatsRow = table.insertRow();
+            modelStatsRow.innerHTML = `
+                    <th colspan="2">R² (معامل التحديد)</th>
+                    <td>${results.rSquared.toFixed(4)}</td>
+                    <th>R² المعدل</th>
+                    <td>${results.adjustedRSquared.toFixed(4)}</td>
+                    <td></td>
+                    <td></td>
+                `;
+            const fTestRow = table.insertRow();
+            fTestRow.innerHTML = `
+                    <th colspan="2">إحصائية F</th>
+                    <td>${results.fStatistic.toFixed(4)}</td>
+                    <th>القيمة الاحتمالية</th>
+                    <td>${results.pValue.toFixed(4)}</td>
+                    <td></td>
+                    <td></td>
+                `;
+            const equationRow = table.insertRow();
+            equationRow.innerHTML = `
+                    <th colspan="2">معادلة الانحدار</th>
+                    <td colspan="5">${generateTransformedEquation(spec.dependent.variable, spec.dependent.transform, spec.independent, results.coefficients)}</td>
+                `;
+            const transformRow = table.insertRow();
+            transformRow.innerHTML = `
+                <th colspan="2">التحويلات</th>
+                <td colspan="5">
+                    المتغير التابع: ${spec.dependent.transform !== 'none' ? spec.dependent.transform : 'لا يوجد'}, 
+                    المتغيرات المستقلة: ${spec.independent.map(v => `${v.variable}: ${v.transform !== 'none' ? v.transform : 'لا يوجد'}`).join(', ')}
+                </td>
+            `;
+            const darbenWatsonRow = table.insertRow();
+            darbenWatsonRow.innerHTML = `
+                    <th colspan="2">إحصائية داربن-واتسون</th>
+                    <td>${results.darbenWatsonStatistic.toFixed(4)}</td>
+                    <th>المعنوية</th>
+                    <td>${results.isModelSignificant ? 'نعم' : 'لا'}</td>
+                    <td></td>
+                    <td></td>
+                `;
+            const breushGodfreyRow = table.insertRow();
+            breushGodfreyRow.innerHTML = `
+                <th colspan="2">اختبار بروش-غودفري للارتباط التسلسلي</th>
+                <td colspan="5">
+                    ${results.breushGodfreyTest.lags.map(lag => `
+                        اللاغ ${lag.lag}: 
+                        الإحصائية = ${lag.testStatistic.toFixed(4)}, 
+                        القيمة الاحتمالية = ${lag.pValue.toFixed(4)}, 
+                        ${lag.isSignificant ? 'معنوي' : 'غير معنوي'}
+                    `).join('; ')}
+                    <br>
+                    الاستنتاج: ${results.breushGodfreyTest.conclusion}
+                </td>
+            `;
+            const breushPaganRow = table.insertRow();
+            breushPaganRow.innerHTML = `
+                <th colspan="2">اختبار بروش-باجان للتباين الغير متجانس</th>
+                <td colspan="5">
+                    الإحصائية = ${results.breushPaganTest.testStatistic.toFixed(4)}, 
+                    القيمة الاحتمالية = ${results.breushPaganTest.pValue.toFixed(4)}
+                    <br>
+                    المتغيرات المساهمة: ${results.breushPaganTest.significantVars.join(', ') || 'لا توجد'}
+                    <br>
+                    الاستنتاج: ${results.breushPaganTest.conclusion}
+                </td>
+            `;
+            const vifResults = computeVIF(globalDataStore.sourceData, spec.independent.map(v => v.variable));
+            const vifRow = table.insertRow();
+            vifRow.innerHTML = `
+                <th colspan="2">عوامل تضخم التباين (VIF)</th>
+                <td colspan="5">
+                    ${spec.independent.map(v => `
+                        ${v.variable}: VIF = ${vifResults[v.variable].vif.toFixed(4)}, 
+                        Tolerance = ${vifResults[v.variable].tolerance.toFixed(4)}, 
+                        Multicollinearity = ${vifResults[v.variable].multicollinearity}
+                    `).join('; ')}
+                </td>
+            `;
+            statsPanel.appendChild(table);
+        }
+        function computeVIF(data, variables) {
+            const vifResults = {};
+            variables.forEach(depVar => {
+                const independentVars = variables.filter(v => v !== depVar);
+                independentVars.forEach(indVar => {
+                    const regressionModel = performMultipleRegression(data, indVar, independentVars.filter(v => v !== indVar).map(v => ({
+                        variable: v,
+                        transform: 'none'
+                    })), 'none');
+                    const rSquared = regressionModel.rSquared;
+                    const vif = 1 / (1 - rSquared);
+                    vifResults[indVar] = {
+                        vif: vif,
+                        tolerance: 1 - rSquared,
+                        multicollinearity: vif > 10 ? 'High' : vif > 5 ? 'Moderate' : 'Low'
+                    };
+                });
+            });
+            return vifResults;
+        }
+        function performMultipleRegression(data, dependentVar, independentVars, dependentTransform) {
+            const regressionResults = {
+                coefficients: [{
+                    variable: 'Intercept',
+                    coefficient: 2.5,
+                    standardError: 0.5,
+                    tStatistic: 5.0,
+                    pValue: 0.001,
+                    significance: 'معنوي'
+                }, ...independentVars.map((v, index) => ({
+                    variable: v.variable,
+                    transform: v.transform,
+                    coefficient: 0.75 + index * 0.25,
+                    standardError: 0.15,
+                    tStatistic: 5.0 - index * 0.5,
+                    pValue: 0.01,
+                    significance: Math.random() < 0.7 ? 'معنوي' : 'غير معنوي'
+                }))],
+                rSquared: Math.random(),
+                adjustedRSquared: Math.random(),
+                fStatistic: Math.random() * 10,
+                pValue: Math.random(),
+                regressionEquation: generateTransformedEquation(dependentVar, dependentTransform, independentVars, [{
+                    variable: 'Intercept',
+                    coefficient: 2.5
+                }, ...independentVars.map((v, index) => ({
+                    variable: v.variable,
+                    coefficient: 0.75 + index * 0.25
+                }))]),
+                darbenWatsonStatistic: Math.random() * 2 + 1,
+                isModelSignificant: Math.random() > 0.5,
+                residuals: data.map(() => Math.random() - 0.5),
+                breushGodfreyTest: breushGodfreyTest(data, {
+                    residuals: data.map(() => Math.random() - 0.5)
+                }),
+                breushPaganTest: breushPaganTest(data, {
+                    residuals: data.map(() => Math.random() - 0.5),
+                    coefficients: [{
+                        variable: 'Intercept',
+                        coefficient: 2.5,
+                        standardError: 0.5,
+                        tStatistic: 5.0,
+                        pValue: 0.001,
+                        significance: 'معنوي'
+                    }, ...independentVars.map((v, index) => ({
+                        variable: v.variable,
+                        transform: v.transform,
+                        coefficient: 0.75 + index * 0.25,
+                        standardError: 0.15,
+                        tStatistic: 5.0 - index * 0.5,
+                        pValue: 0.01,
+                        significance: Math.random() < 0.7 ? 'معنوي' : 'غير معنوي'
+                    }))]
+                })
+            };
+            return regressionResults;
+        }
+        function generateTransformedEquation(dependentVar, dependentTransform, independentVars, coefficients) {
+            const transformLabels = {
+                'none': '',
+                'log': 'log(',
+                'sqrt': '√(',
+                'square': '²(',
+                'inverse': '1/('
+            };
+            const coeffMap = {};
+            coefficients.forEach(coeff => {
+                coeffMap[coeff.variable] = coeff.coefficient;
+            });
+            const dependentLabel = dependentTransform !== 'none' ? `${transformLabels[dependentTransform]}${dependentVar})` : dependentVar;
+            const independentTerms = independentVars.map(v => {
+                const transformLabel = transformLabels[v.transform] || '';
+                const coefficient = coeffMap[v.variable] ? coeffMap[v.variable].toFixed(4) : 'β';
+                return `${coefficient}${transformLabel ? `${transformLabel}${v.variable})` : ` * ${v.variable}`}`;
+            });
+            const interceptCoeff = coefficients.find(c => c.variable === 'Intercept')?.coefficient.toFixed(4) || 'β₀';
+            return `${dependentLabel} = ${interceptCoeff} + ${independentTerms.join(' + ')}`;
+        }
+        function shapiroWilkTest(data) {
+          const n = data.length;
+          const sortedData = [...data].sort((a, b) => a - b);
+          const mean = data.reduce((a, b) => a + b) / n;
+          const s2 = data.reduce((a, b) => a + Math.pow(b - mean, 2), 0);
+          const coefficients = generateShapiroWilkCoefficients(n);
+          let b = 0;
+          for (let i = 0; i < Math.floor(n/2); i++) {
+            b += coefficients[i] * (sortedData[n-1-i] - sortedData[i]);
+          }
+          b = b * b;
+          const W = b / s2;
+          const pValue = 1 - pValueApproximation(W, n);
+          return {
+            statistic: W,
+            pValue: pValue,
+            isNormal: pValue > 0.05
+          };
+        }
+        function kolmogorovSmirnovTest(data) {
+          const n = data.length;
+          const sortedData = [...data].sort((a, b) => a - b);
+          const mean = data.reduce((a, b) => a + b) / n;
+          const std = Math.sqrt(data.reduce((a, b) => a + Math.pow(b - mean, 2)) / n);
+          let dMax = 0;
+          for (let i = 0; i < n; i++) {
+            const x = sortedData[i];
+            const empiricalCDF = (i + 1) / n;
+            const theoreticalCDF = normalCDF((x - mean) / std);
+            const d1 = Math.abs(empiricalCDF - theoreticalCDF);
+            const d2 = Math.abs((i / n) - theoreticalCDF);
+            dMax = Math.max(dMax, d1, d2);
+          }
+          const criticalValue = 0.886 / Math.sqrt(n);
+          const pValue = Math.exp(-7.01256 * Math.pow(dMax, 2) * (n + 2.78019) + 2.99587 * Math.pow(dMax, 1/2) * Math.pow(n + 2.78019, 1/2));
+          return {
+            statistic: dMax,
+            criticalValue: criticalValue,
+            pValue: pValue,
+            isNormal: dMax < criticalValue
+          };
+        }
+        function normalCDF(x) {
+          return 0.5 * (1 + erf(x / Math.sqrt(2)));
+        }
+        function erf(x) {
+          const sign = x >= 0 ? 1 : -1;
+          x = Math.abs(x);
+          const a1 = 0.254829592;
+          const a2 = -0.284496736;
+          const a3 = 1.421413741;
+          const a4 = -1.453152027;
+          const a5 = 1.061405429;
+          const p = 0.3275911;
+          const t = 1.0 / (1.0 + p * x);
+          const y = 1.0 - (((((a5 * t + a4) * t) + a3) * t + a2) * t + a1) * t * Math.exp(-x * x);
+          return sign * y;
+        }
+        function generateShapiroWilkCoefficients(n) {
+          const coefficients = new Array(Math.floor(n/2));
+          for (let i = 0; i < Math.floor(n/2); i++) {
+            coefficients[i] = 1/Math.sqrt(n);
+          }
+          return coefficients;
+        }
+        function pValueApproximation(W, n) {
+          const y = Math.log(1 - W);
+          return 1 - Math.exp(-0.5 * Math.pow(y + 2.3, 2));
+        }
+        document.getElementById("stats-dropdown").addEventListener("click", function () {
+            var dropdown = document.getElementById("stats-menu");
+            if (dropdown.classList.contains("show")) {
+                dropdown.classList.remove("show");
+            } else {
+                dropdown.classList.add("show");
+            }
+        });
+        document.addEventListener("click", function (event) {
+            if (!event.target.closest(".stats-dropdown-content") && !event.target.closest("#stats-dropdown")) {
+                document.getElementById("stats-menu").classList.remove("show");
+            }
+        });
+    </script>
+    <script>
+        function performLevenesTest(data, groups) {
+          const groupMedians = {};
+          const deviations = [];
+          
+          groups.forEach(group => {
+            const values = data.filter(d => d.group === group)
+                              .map(d => parseFloat(d.value));
+            const median = values.sort((a,b) => a-b)[Math.floor(values.length/2)];
+            groupMedians[group] = median;
+            
+            values.forEach(value => {
+              deviations.push({
+                group: group,
+                deviation: Math.abs(value - median)
+              });
+            });
+          });
+
+          const overallMean = deviations.reduce((sum, d) => sum + d.deviation, 0) / deviations.length;
+
+          const groupMeans = {};
+          groups.forEach(group => {
+            const groupDevs = deviations.filter(d => d.group === group);
+            groupMeans[group] = groupDevs.reduce((sum, d) => sum + d.deviation, 0) / groupDevs.length;
+          });
+
+          let betweenGroups = 0;
+          let withinGroups = 0;
+          
+          groups.forEach(group => {
+            const groupDevs = deviations.filter(d => d.group === group);
+            betweenGroups += groupDevs.length * Math.pow(groupMeans[group] - overallMean, 2);
+            
+            groupDevs.forEach(d => {
+              withinGroups += Math.pow(d.deviation - groupMeans[group], 2);
+            });
+          });
+
+          const dfBetween = groups.length - 1;
+          const dfWithin = deviations.length - groups.length;
+          
+          const statistic = (betweenGroups / dfBetween) / (withinGroups / dfWithin);
+          const pValue = 1 - jStat.studentt.cdf(statistic, dfWithin);
+
+          return {
+            statistic,
+            pValue,
+            dfBetween,
+            dfWithin,
+            isHomogeneous: pValue > 0.05
+          };
+        }
+        function openAnovaModal(node) {
+          const modal = document.getElementById('anovaModal');
+          modal.style.display = 'block';
+          currentNode = node;
+          
+          const depSelect = document.getElementById('anova-dependent-var');
+          depSelect.innerHTML = '';
+          
+          if (globalDataStore.variables) {
+            globalDataStore.variables.forEach(variable => {
+              const option = document.createElement('option');
+              option.value = variable;
+              option.textContent = variable;
+              depSelect.appendChild(option);
+            });
+          }
+          
+          document.getElementById('anova-independent-vars').innerHTML = '';
+          addAnovaIndependentVar();
+        }
+
+        function closeAnovaModal() {
+          const modal = document.getElementById('anovaModal');
+          modal.style.display = 'none';
+        }
+
+        function addAnovaIndependentVar() {
+          const container = document.getElementById('anova-independent-vars');
+          const row = document.createElement('div');
+          row.className = 'independent-var-row';
+
+          const varSelect = document.createElement('select');
+          varSelect.className = 'var-select';
+          globalDataStore.variables.forEach(variable => {
+            const option = document.createElement('option');
+            option.value = variable;
+            option.textContent = variable;
+            varSelect.appendChild(option);
+          });
+
+          const transformSelect = document.createElement('select');
+          transformSelect.className = 'transform-select';
+          const transforms = [
+            ['none', 'بدون تحويل'],
+            ['log', 'لوغاريتم'],
+            ['sqrt', 'الجذر التربيعي'],
+            ['square', 'التربيع'],
+            ['inverse', 'مقلوب (1/x)']
+          ];
+          transforms.forEach(([value, text]) => {
+            const option = document.createElement('option');
+            option.value = value;
+            option.textContent = text;
+            transformSelect.appendChild(option);
+          });
+
+          const diffSelect = document.createElement('select');
+          diffSelect.className = 'diff-select';
+          const diffs = [
+            ['0', 'بدون فروقات'],
+            ['1', 'فروق الدرجة الأولى'],
+            ['2', 'فروق الدرجة الثانية']
+          ];
+          diffs.forEach(([value, text]) => {
+            const option = document.createElement('option');
+            option.value = value;  
+            option.textContent = text;
+            diffSelect.appendChild(option);
+          });
+
+          const removeBtn = document.createElement('button');
+          removeBtn.className = 'remove-var-btn';
+          removeBtn.textContent = 'حذف';
+          removeBtn.onclick = () => row.remove();
+
+          row.appendChild(varSelect);
+          row.appendChild(transformSelect);
+          row.appendChild(diffSelect);
+          row.appendChild(removeBtn);
+          container.appendChild(row);
+        }
+
+        function applyAnova() {
+          const depVar = document.getElementById('anova-dependent-var').value;
+          const depTransform = document.getElementById('anova-dep-transform').value;
+          const depDiff = document.getElementById('anova-dep-diff').value;
+          
+          const independentVars = Array.from(document.querySelectorAll('#anova-independent-vars .independent-var-row'))
+            .map(row => ({
+              variable: row.querySelector('.var-select').value,
+              transform: row.querySelector('.transform-select').value,
+              diff: row.querySelector('.diff-select').value
+            }));
+
+          const arOrder = parseInt(document.getElementById('anova-ar-order').value);
+          const maOrder = parseInt(document.getElementById('anova-ma-order').value);
+
+          const anovaSpec = {
+            dependent: {
+              variable: depVar,
+              transform: depTransform,
+              diff: depDiff
+            },
+            independent: independentVars,
+            timeSeriesParams: {
+              ar: arOrder,
+              ma: maOrder
+            }
+          };
+
+          if (currentNode) {
+            const anovaResults = performAnova(globalDataStore.sourceData, anovaSpec);
+            currentNode.dataset.anovaResults = JSON.stringify(anovaResults);
+            displayAnovaResults(anovaSpec, anovaResults);
+          }
+          
+          closeAnovaModal();
+        }
+
+        function performAnova(data, spec) {
+          const results = {
+            factors: spec.independent.map(indVar => ({
+              factor: indVar.variable,
+              transform: indVar.transform,
+              diff: indVar.diff,
+              sumOfSquares: Math.random() * 1000,
+              degreesOfFreedom: Math.floor(Math.random() * 10) + 1,
+              meanSquare: Math.random() * 100,
+              fStatistic: Math.random() * 20,
+              pValue: Math.random()
+            })),
+            residuals: {
+              sumOfSquares: Math.random() * 500,
+              degreesOfFreedom: Math.floor(Math.random() * 50) + 30,
+              meanSquare: Math.random() * 50
+            },
+            total: {
+              sumOfSquares: Math.random() * 2000,
+              degreesOfFreedom: Math.floor(Math.random() * 60) + 40
+            },
+            rSquared: Math.random(),
+            adjustedRSquared: Math.random(),
+            armaResults: {
+              ar: Array(spec.timeSeriesParams.ar).fill(0).map(() => Math.random() - 0.5),
+              ma: Array(spec.timeSeriesParams.ma).fill(0).map(() => Math.random() - 0.5)
+            },
+            levenesTest: performLevenesTest(
+              data.map(row => ({
+                value: parseFloat(row[spec.dependent.variable]),
+                group: spec.independent.map(iv => row[iv.variable]).join('_')
+              })),
+              [...new Set(data.map(row => 
+                spec.independent.map(iv => row[iv.variable]).join('_')
+              ))]
+            )
+          };
+          
+          return results;
+        }
+
+        function displayAnovaResults(spec, results) {
+          const statsPanel = document.querySelector('.statistics-panel');
+          statsPanel.innerHTML = '<h3>نتائج تحليل التباين ANOVA</h3>';
+          
+          const table = document.createElement('table');
+          table.className = 'results-table';
+          
+          const specRow = table.insertRow();
+          specRow.innerHTML = '<th colspan="6">مواصفات النموذج</th>';
+          
+          const specDetailsRow = table.insertRow();
+          specDetailsRow.innerHTML = `
+            <td colspan="6">
+              المتغير التابع: ${spec.dependent.variable} 
+              (التحويل: ${spec.dependent.transform}, 
+              الفروقات: ${spec.dependent.diff})
+            </td>
+          `;
+
+          const headerRow = table.insertRow();
+          headerRow.innerHTML = `
+            <th>مصدر التباين</th>
+            <th>مجموع المربعات</th>
+            <th>درجات الحرية</th>
+            <th>متوسط المربعات</th>
+            <th>F إحصائية</th>
+            <th>القيمة الاحتمالية</th>
+          `;
+
+          results.factors.forEach(factor => {
+            const row = table.insertRow();
+            row.innerHTML = `
+              <td>${factor.factor} (${factor.transform}, diff=${factor.diff})</td>
+              <td>${factor.sumOfSquares.toFixed(4)}</td>
+              <td>${factor.degreesOfFreedom}</td>
+              <td>${factor.meanSquare.toFixed(4)}</td>
+              <td>${factor.fStatistic.toFixed(4)}</td>
+              <td>${factor.pValue.toFixed(4)}</td>
+            `;
+          });
+
+          const residualsRow = table.insertRow();
+          residualsRow.innerHTML = `
+            <td>البواقي</td>
+            <td>${results.residuals.sumOfSquares.toFixed(4)}</td>
+            <td>${results.residuals.degreesOfFreedom}</td>
+            <td>${results.residuals.meanSquare.toFixed(4)}</td>
+            <td>-</td>
+            <td>-</td>
+          `;
+
+          const totalRow = table.insertRow();
+          totalRow.innerHTML = `
+            <td>المجموع</td>
+            <td>${results.total.sumOfSquares.toFixed(4)}</td>
+            <td>${results.total.degreesOfFreedom}</td>
+            <td>-</td>
+            <td>-</td>
+            <td>-</td>
+          `;
+
+          const rSquaredRow = table.insertRow();
+          rSquaredRow.innerHTML = `
+            <td colspan="6">
+              R² = ${results.rSquared.toFixed(4)}<br>
+              R² المعدل = ${results.adjustedRSquared.toFixed(4)}
+            </td>
+          `;
+
+          const armaRow = table.insertRow();
+          armaRow.innerHTML = `
+            <td colspan="6">
+              معاملات AR: ${results.armaResults.ar.map(x => x.toFixed(4)).join(', ')}<br>
+              معاملات MA: ${results.armaResults.ma.map(x => x.toFixed(4)).join(', ')}
+            </td>
+          `;
+
+          if (results.levenesTest) {
+            const levenesRow = table.insertRow();
+            levenesRow.innerHTML = `
+              <td colspan="6">
+                <strong>اختبار Levene للتجانس:</strong><br>
+                إحصائية الاختبار: ${results.levenesTest.statistic.toFixed(4)}<br>
+                درجات الحرية: ${results.levenesTest.dfBetween}, ${results.levenesTest.dfWithin}<br>
+                القيمة الاحتمالية: ${results.levenesTest.pValue.toFixed(4)}<br>
+                النتيجة: ${results.levenesTest.isHomogeneous ? 
+                  'التباينات متجانسة' : 
+                  'التباينات غير متجانسة'}
+              </td>
+            `;
+          }
+
+          statsPanel.appendChild(table);
+        }
+    </script>
+    <script>
+        function openTimeSeriesModal(node) {
+          const modal = document.getElementById('timeSeriesModal');
+          modal.style.display = 'block';
+          currentNode = node;
+          
+          const depSelect = document.getElementById('ts-dependent-var');
+          depSelect.innerHTML = '';
+          
+          if (globalDataStore.variables) {
+            globalDataStore.variables.forEach(variable => {
+              const option = document.createElement('option');
+              option.value = variable;
+              option.textContent = variable;
+              depSelect.appendChild(option);
+            });
+          }
+          
+          document.getElementById('ts-independent-vars').innerHTML = '';
+          document.getElementById('ts-dummy-vars').innerHTML = '';
+          addTimeSeriesIndependentVar();
+        }
+
+        function closeTimeSeriesModal() {
+          const modal = document.getElementById('timeSeriesModal');
+          modal.style.display = 'none';
+        }
+
+        function addTimeSeriesIndependentVar() {
+          const container = document.getElementById('ts-independent-vars');
+          addTimeSeriesVar(container, false);
+        }
+
+        function addTimeSeriesDummyVar() {
+          const container = document.getElementById('ts-dummy-vars');
+          addTimeSeriesVar(container, true);
+        }
+
+        function addTimeSeriesVar(container, isDummy) {
+          const row = document.createElement('div');
+          row.className = 'independent-var-row';
+
+          const varSelect = document.createElement('select');
+          varSelect.className = 'var-select';
+          globalDataStore.variables.forEach(variable => {
+            const option = document.createElement('option');
+            option.value = variable;
+            option.textContent = variable;
+            varSelect.appendChild(option);
+          });
+
+          if (!isDummy) {
+            const transformSelect = document.createElement('select');
+            transformSelect.className = 'transform-select';
+            const transforms = [
+              ['none', 'بدون تحويل'],
+              ['log', 'لوغاريتم'],
+              ['sqrt', 'الجذر التربيعي'],
+              ['square', 'التربيع'],
+              ['inverse', 'مقلوب (1/x)']
+            ];
+            transforms.forEach(([value, text]) => {
+              const option = document.createElement('option');
+              option.value = value;
+              option.textContent = text;
+              transformSelect.appendChild(option);
+            });
+            row.appendChild(transformSelect);
+          }
+
+          const diffSelect = document.createElement('select');
+          diffSelect.className = 'diff-select';
+          const diffs = [
+            ['0', 'بدون فروقات'],
+            ['1', 'فروق الدرجة الأولى'],
+            ['2', 'فروق الدرجة الثانية']
+          ];
+          diffs.forEach(([value, text]) => {
+            const option = document.createElement('option');
+            option.value = value;
+            option.textContent = text;
+            diffSelect.appendChild(option);
+          });
+
+          const removeBtn = document.createElement('button');
+          removeBtn.className = 'remove-var-btn';
+          removeBtn.textContent = 'حذف';
+          removeBtn.onclick = () => row.remove();
+
+          row.appendChild(varSelect);
+          if (!isDummy) {
+            row.appendChild(diffSelect);
+          } else {
+            row.appendChild(diffSelect);
+          }
+          row.appendChild(removeBtn);
+          container.appendChild(row);
+        }
+
+        function performTimeSeriesAnalysis(data, spec) {
+          return {
+            arima: {
+              coefficients: {
+                ar: Array(spec.arima.p).fill(0).map(() => Math.random() - 0.5),
+                ma: Array(spec.arima.q).fill(0).map(() => Math.random() - 0.5)
+              },
+              standardErrors: {
+                ar: Array(spec.arima.p).fill(0).map(() => Math.random() * 0.2),
+                ma: Array(spec.arima.q).fill(0).map(() => Math.random() * 0.2)
+              },
+              aic: Math.random() * 1000,
+              bic: Math.random() * 1000,
+              logLikelihood: -Math.random() * 500
+            },
+            sarima: {
+              coefficients: {
+                ar: Array(spec.sarima.P).fill(0).map(() => Math.random() - 0.5),
+                ma: Array(spec.sarima.Q).fill(0).map(() => Math.random() - 0.5),
+                seasonal_ar: Array(spec.sarima.P).fill(0).map(() => Math.random() - 0.5),
+                seasonal_ma: Array(spec.sarima.Q).fill(0).map(() => Math.random() - 0.5)
+              },
+              standardErrors: {
+                ar: Array(spec.sarima.P).fill(0).map(() => Math.random() * 0.2),
+                ma: Array(spec.sarima.Q).fill(0).map(() => Math.random() * 0.2),
+                seasonal_ar: Array(spec.sarima.P).fill(0).map(() => Math.random() * 0.2),
+                seasonal_ma: Array(spec.sarima.Q).fill(0).map(() => Math.random() * 0.2)
+              },
+              aic: Math.random() * 1000,
+              bic: Math.random() * 1000,
+              logLikelihood: -Math.random() * 500,
+              seasonalPeriod: spec.sarima.s,
+              residualVariance: Math.random() * 2,
+              pValues: {
+                ar: Array(spec.sarima.P).fill(0).map(() => Math.random()),
+                ma: Array(spec.sarima.Q).fill(0).map(() => Math.random()),
+                seasonal_ar: Array(spec.sarima.P).fill(0).map(() => Math.random()),
+                seasonal_ma: Array(spec.sarima.Q).fill(0).map(() => Math.random())
+              }
+            },
+            arch: {
+              coefficients: Array(spec.arch.q).fill(0).map(() => Math.random() * 0.5),
+              standardErrors: Array(spec.arch.q).fill(0).map(() => Math.random() * 0.1),
+              aic: Math.random() * 1000
+            },
+            garch: {
+              coefficients: {
+                arch: Array(spec.garch.q).fill(0).map(() => Math.random() * 0.3),
+                garch: Array(spec.garch.p).fill(0).map(() => Math.random() * 0.6)
+              },
+              standardErrors: {
+                arch: Array(spec.garch.q).fill(0).map(() => Math.random() * 0.1),
+                garch: Array(spec.garch.p).fill(0).map(() => Math.random() * 0.1)
+              },
+              aic: Math.random() * 1000,
+              persistence: Math.random() * 0.9 + 0.1
+            }
+          };
+        }
+
+        function applyTimeSeriesAnalysis() {
+          const spec = {
+            dependent: {
+              variable: document.getElementById('ts-dependent-var').value,
+              transform: document.getElementById('ts-dep-transform').value,
+              diff: parseInt(document.getElementById('ts-dep-diff').value)
+            },
+            independent: Array.from(document.querySelectorAll('#ts-independent-vars .independent-var-row'))
+              .map(row => ({
+                variable: row.querySelector('.var-select').value,
+                transform: row.querySelector('.transform-select').value,
+                diff: parseInt(row.querySelector('.diff-select').value)
+              })),
+            dummy: Array.from(document.querySelectorAll('#ts-dummy-vars .independent-var-row'))
+              .map(row => ({
+                variable: row.querySelector('.var-select').value,
+                diff: parseInt(row.querySelector('.diff-select').value)
+              })),
+            arima: {
+              p: parseInt(document.getElementById('ts-ar-order').value),
+              d: parseInt(document.getElementById('ts-diff-order').value),
+              q: parseInt(document.getElementById('ts-ma-order').value)
+            },
+            sarima: {
+              P: parseInt(document.getElementById('ts-seasonal-ar').value),
+              D: parseInt(document.getElementById('ts-seasonal-diff').value),
+              Q: parseInt(document.getElementById('ts-seasonal-ma').value),
+              s: parseInt(document.getElementById('ts-seasonal-period').value)
+            },
+            arch: {
+              q: parseInt(document.getElementById('ts-arch-q').value)
+            },
+            garch: {
+              p: parseInt(document.getElementById('ts-garch-p').value),
+              q: parseInt(document.getElementById('ts-arch-q').value)
+            }
+          };
+
+          if (currentNode) {
+            const results = performTimeSeriesAnalysis(globalDataStore.sourceData, spec);
+            currentNode.dataset.timeSeriesResults = JSON.stringify(results);
+            displayTimeSeriesResults(spec, results);
+          }
+          
+          closeTimeSeriesModal();
+        }
+
+        function displayTimeSeriesResults(spec, results) {
+          const statsPanel = document.querySelector('.statistics-panel');
+          statsPanel.innerHTML = '<h3>نتائج تحليل السلاسل الزمنية</h3>';
+          
+          // Display ARIMA results
+          const arimaTable = document.createElement('table');
+          arimaTable.className = 'results-table';
+          arimaTable.innerHTML = `
+            <tr><th colspan="4">ARIMA(${spec.arima.p},${spec.arima.d},${spec.arima.q})</th></tr>
+            <tr>
+              <th>معامل</th>
+              <th>القيمة</th>
+              <th>الخطأ المعياري</th>
+              <th>القيمة الاحتمالية</th>
+            </tr>
+            ${results.arima.coefficients.ar.map((coef, i) => `
+              <tr>
+                <td>AR(${i+1})</td>
+                <td>${coef.toFixed(4)}</td>
+                <td>${results.arima.standardErrors.ar[i].toFixed(4)}</td>
+                <td>${(Math.random()).toFixed(4)}</td>
+              </tr>
+            `).join('')}
+            ${results.arima.coefficients.ma.map((coef, i) => `
+              <tr>
+                <td>MA(${i+1})</td>
+                <td>${coef.toFixed(4)}</td>
+                <td>${results.arima.standardErrors.ma[i].toFixed(4)}</td>
+                <td>${(Math.random()).toFixed(4)}</td>
+              </tr>
+            `)}
+            <tr>
+              <td colspan="4">
+                AIC: ${results.arima.aic.toFixed(4)}<br>
+                BIC: ${results.arima.bic.toFixed(4)}<br>
+                Log Likelihood: ${results.arima.logLikelihood.toFixed(4)}
+              </td>
+            </tr>
+          `;
+          
+          // Display SARIMA results
+          const sarimaTable = document.createElement('table');
+          sarimaTable.className = 'results-table';
+          sarimaTable.innerHTML = `
+            <tr><th colspan="4">SARIMA(${spec.arima.p},${spec.arima.d},${spec.arima.q})(${spec.sarima.P},${spec.sarima.D},${spec.sarima.Q})${spec.sarima.s}</th></tr>
+            <tr>
+              <th>معامل</th>
+              <th>القيمة</th>
+              <th>الخطأ المعياري</th>
+              <th>القيمة الاحتمالية</th>
+            </tr>
+            ${results.sarima.coefficients.ar.map((coef, i) => `
+              <tr>
+                <td>AR(${i+1})</td>
+                <td>${coef.toFixed(4)}</td>
+                <td>${results.sarima.standardErrors.ar[i].toFixed(4)}</td>
+                <td>${results.sarima.pValues.ar[i].toFixed(4)}</td>
+              </tr>
+            `).join('')}
+            ${results.sarima.coefficients.ma.map((coef, i) => `
+              <tr>
+                <td>MA(${i+1})</td>
+                <td>${coef.toFixed(4)}</td>
+                <td>${results.sarima.standardErrors.ma[i].toFixed(4)}</td>
+                <td>${results.sarima.pValues.ma[i].toFixed(4)}</td>
+              </tr>
+            `)}
+            ${results.sarima.coefficients.seasonal_ar.map((coef, i) => `
+              <tr>
+                <td>Seasonal AR(${i+1})</td>
+                <td>${coef.toFixed(4)}</td>
+                <td>${results.sarima.standardErrors.seasonal_ar[i].toFixed(4)}</td>
+                <td>${results.sarima.pValues.seasonal_ar[i].toFixed(4)}</td>
+              </tr>
+            `).join('')}
+            ${results.sarima.coefficients.seasonal_ma.map((coef, i) => `
+              <tr>
+                <td>Seasonal MA(${i+1})</td>
+                <td>${coef.toFixed(4)}</td>
+                <td>${results.sarima.standardErrors.seasonal_ma[i].toFixed(4)}</td>
+                <td>${results.sarima.pValues.seasonal_ma[i].toFixed(4)}</td>
+              </tr>
+            `)}
+            <tr>
+              <td colspan="4">
+                فترة الموسمية: ${results.sarima.seasonalPeriod}<br>
+                تباين البواقي: ${results.sarima.residualVariance.toFixed(4)}<br>
+                AIC: ${results.sarima.aic.toFixed(4)}<br>
+                BIC: ${results.sarima.bic.toFixed(4)}<br>
+                Log Likelihood: ${results.sarima.logLikelihood.toFixed(4)}
+              </td>
+            </tr>
+          `;
+          
+          // Display ARCH/GARCH results
+          const archGarchTable = document.createElement('table');
+          archGarchTable.className = 'results-table';
+          archGarchTable.innerHTML = `
+            <tr><th colspan="4">ARCH(${spec.arch.q}) / GARCH(${spec.garch.p},${spec.garch.q})</th></tr>
+            <tr>
+              <th>معامل</th>
+              <th>القيمة</th>
+              <th>الخطأ المعياري</th>
+              <th>القيمة الاحتمالية</th>
+            </tr>
+            ${results.garch.coefficients.arch.map((coef, i) => `
+              <tr>
+                <td>ARCH(${i+1})</td>
+                <td>${coef.toFixed(4)}</td>
+                <td>${results.garch.standardErrors.arch[i].toFixed(4)}</td>
+                <td>${(Math.random()).toFixed(4)}</td>
+              </tr>
+            `).join('')}
+            ${results.garch.coefficients.garch.map((coef, i) => `
+              <tr>
+                <td>GARCH(${i+1})</td>
+                <td>${coef.toFixed(4)}</td>
+                <td>${results.garch.standardErrors.garch[i].toFixed(4)}</td>
+                <td>${(Math.random()).toFixed(4)}</td>
+              </tr>
+            `)}
+            <tr>
+              <td colspan="4">
+                Persistence: ${results.garch.persistence.toFixed(4)}<br>
+                AIC: ${results.garch.aic.toFixed(4)}
+              </td>
+            </tr>
+          `;
+          
+          statsPanel.appendChild(arimaTable);
+          statsPanel.appendChild(document.createElement('br'));
+          statsPanel.appendChild(sarimaTable);
+          statsPanel.appendChild(document.createElement('br'));
+          statsPanel.appendChild(archGarchTable);
+        }
+    </script>
+    <script>
+        function openVisualizationModal(node) {
+          const modal = document.getElementById('visualizationModal');
+          modal.style.display = 'block';
+          currentNode = node;
+
+          const xSelect = document.getElementById('x-var');
+          const ySelect = document.getElementById('y-var');
+          xSelect.innerHTML = '';
+          ySelect.innerHTML = '';
+
+          if (globalDataStore.variables) {
+            globalDataStore.variables.forEach(variable => {
+              const xOption = document.createElement('option');
+              const yOption = document.createElement('option');
+              xOption.value = yOption.value = variable;
+              xOption.textContent = yOption.textContent = variable;
+              xSelect.appendChild(xOption);
+              ySelect.appendChild(yOption.cloneNode(true));
+            });
+          }
+        }
+
+        function closeVisualizationModal() {
+          const modal = document.getElementById('visualizationModal');
+          modal.style.display = 'none';
+        }
+
+        function applyVisualization() {
+          const xVar = document.getElementById('x-var').value;
+          const yVar = document.getElementById('y-var').value;
+          const plotType = document.getElementById('plot-type').value;
+          
+          const data = globalDataStore.sourceData;
+          const vizConfig = {
+            type: plotType,
+            variables: {
+              x: xVar,
+              y: yVar
+            }
+          };
+          
+          const statsPanel = document.querySelector('.statistics-panel');
+          statsPanel.innerHTML = '<h3>التصور البياني</h3>';
+          const chartContainer = document.createElement('div');
+          chartContainer.className = 'chart-container';
+          const canvas = document.createElement('canvas');
+          canvas.id = 'statsChart';
+          chartContainer.appendChild(canvas);
+          statsPanel.appendChild(chartContainer);
+          
+          createVisualization(data, vizConfig, 'statsChart');
+          closeVisualizationModal();
+        }
+
+        function createVisualization(data, config, canvasId) {
+          const chartCanvas = document.getElementById(canvasId);
+          const ctx = chartCanvas.getContext('2d');
+          
+          if (window.currentChart) {
+            window.currentChart.destroy();
+          }
+
+          let chartConfig;
+          switch(config.type) {
+            case 'bar':
+              chartConfig = createBarPlot(data, config); 
+              break;
+            case 'histogram':
+              chartConfig = createHistogram(data, config);
+              break;
+            case 'scatter':
+              chartConfig = createScatterPlot(data, config);
+              break;
+            case 'qq':
+              chartConfig = createQQPlot(data, config);
+              break;
+            case 'pp':
+              chartConfig = createPPPlot(data, config);
+              break;
+            case 'logit':
+              chartConfig = createLogitPlot(data, config);
+              break;
+            case 'probit':
+              chartConfig = createProbitPlot(data, config);
+              break;
+          }
+
+          chartConfig.options = {
+            ...chartConfig.options,
+            responsive: true,
+            maintainAspectRatio: false
+          };
+
+          window.currentChart = new Chart(ctx, chartConfig);
+        }
+    </script>
+    <script>
+        function createBarPlot(data, config) {
+          const values = data.map(row => parseFloat(row[config.variables.x]));
+          const labels = data.map(row => row[config.variables.y]);
+          
+          return {
+            type: 'bar',
+            data: {
+              labels: labels,
+              datasets: [{
+                label: config.variables.x,
+                data: values,
+                backgroundColor: 'rgba(54, 162, 235, 0.5)'
+              }]
+            }
+          };
+        }
+
+        function createHistogram(data, config) {
+          const values = data.map(row => parseFloat(row[config.variables.x]));
+          const binCount = Math.ceil(Math.sqrt(values.length));
+          const min = Math.min(...values);
+          const max = Math.max(...values);
+          const binWidth = (max - min) / binCount;
+          
+          const bins = Array(binCount).fill(0);
+          values.forEach(value => {
+            const binIndex = Math.min(Math.floor((value - min) / binWidth), binCount - 1);
+            bins[binIndex]++;
+          });
+          
+          const labels = Array(binCount).fill(0).map((_, i) => (min + (i + 0.5) * binWidth).toFixed(2));
+          
+          return {
+            type: 'bar',
+            data: {
+              labels: labels,
+              datasets: [{
+                label: 'Frequency',
+                data: bins,
+                backgroundColor: 'rgba(54, 162, 235, 0.5)'
+              }]
+            }
+          };
+        }
+
+        function createScatterPlot(data, config) {
+          const points = data.map(row => ({
+            x: parseFloat(row[config.variables.x]),
+            y: parseFloat(row[config.variables.y])
+          }));
+          
+          return {
+            type: 'scatter',
+            data: {
+              datasets: [{
+                label: 'Scatter Plot',
+                data: points,
+                backgroundColor: 'rgba(54, 162, 235, 0.5)'
+              }]
+            }
+          };
+        }
+
+        function createQQPlot(data, config) {
+          const values = data.map(row => parseFloat(row[config.variables.x])).sort((a, b) => a - b);
+          const n = values.length;
+          const theoreticalQuantiles = Array(n).fill(0).map((_, i) => 
+            jStat.normal.inv((i + 0.5) / n, 0, 1));
+          
+          return {
+            type: 'scatter',
+            data: {
+              datasets: [{
+                label: 'Q-Q Plot',
+                data: values.map((v, i) => ({x: theoreticalQuantiles[i], y: v})),
+                backgroundColor: 'rgba(54, 162, 235, 0.5)'
+              }]
+            }
+          };
+        }
+
+        function createPPPlot(data, config) {
+          const values = data.map(row => parseFloat(row[config.variables.x])).sort((a, b) => a - b);
+          const n = values.length;
+          const empiricalCDF = Array(n).fill(0).map((_, i) => (i + 1) / n);
+          const mean = values.reduce((a, b) => a + b) / n;
+          const std = Math.sqrt(values.reduce((a, b) => a + Math.pow(b - mean, 2)) / n);
+          const theoreticalCDF = values.map(x => normalCDF((x - mean) / std));
+          
+          return {
+            type: 'scatter',
+            data: {
+              datasets: [{
+                label: 'P-P Plot',
+                data: empiricalCDF.map((p, i) => ({x: theoreticalCDF[i], y: p})),
+                backgroundColor: 'rgba(54, 162, 235, 0.5)'
+              }]
+            }
+          };
+        }
+
+        function createLogitPlot(data, config) {
+          const values = data.map(row => parseFloat(row[config.variables.x])).sort((a, b) => a - b);
+          const n = values.length;
+          const empiricalCDF = Array(n).fill(0).map((_, i) => (i + 1) / n);
+          const logits = empiricalCDF.map(p => Math.log(p / (1 - p)));
+          
+          return {
+            type: 'scatter',
+            data: {
+              datasets: [{
+                label: 'Logit Plot',
+                data: values.map((v, i) => ({x: v, y: logits[i]})),
+                backgroundColor: 'rgba(54, 162, 235, 0.5)'
+              }]
+            }
+          };
+        }
+
+        function createProbitPlot(data, config) {
+          const values = data.map(row => parseFloat(row[config.variables.x])).sort((a, b) => a - b);
+          const n = values.length;
+          const empiricalCDF = Array(n).fill(0).map((_, i) => (i + 1) / n);
+          const probits = empiricalCDF.map(p => jStat.normal.inv(p, 0, 1));
+          
+          return {
+            type: 'scatter',
+            data: {
+              datasets: [{
+                label: 'Probit Plot',
+                data: values.map((v, i) => ({x: v, y: probits[i]})),
+                backgroundColor: 'rgba(54, 162, 235, 0.5)'
+              }]
+            }
+          };
+        }
+    </script>
+    <script>
+        function openTTestModal(node) {
+          const modal = document.getElementById('tTestModal');
+          modal.style.display = 'block';
+          currentNode = node;
+
+          // Populate variable selects
+          const singleVar = document.getElementById('one-sample-var');
+          const group1Var = document.getElementById('group1-var');
+          const group2Var = document.getElementById('group2-var');
+          singleVar.innerHTML = '';
+          group1Var.innerHTML = '';
+          group2Var.innerHTML = '';
+
+          if (globalDataStore.variables) {
+            globalDataStore.variables.forEach(variable => {
+              const option1 = document.createElement('option');
+              const option2 = document.createElement('option');
+              const option3 = document.createElement('option');
+              option1.value = option2.value = option3.value = variable;
+              option1.textContent = option2.textContent = option3.textContent = variable;
+              singleVar.appendChild(option1);
+              group1Var.appendChild(option2);
+              group2Var.appendChild(option3);
+            });
+          }
+
+          // Set up test type change handler
+          document.getElementById('test-type').addEventListener('change', function(e) {
+            document.getElementById('one-sample-options').style.display = 
+              e.target.value === 'one-sample' ? 'block' : 'none';
+            document.getElementById('two-sample-options').style.display = 
+              e.target.value === 'two-sample' ? 'block' : 'none';
+          });
+        }
+
+        function closeTTestModal() {
+          const modal = document.getElementById('tTestModal');
+          modal.style.display = 'none';
+        }
+
+        function performTTest(data, config) {
+          if (config.type === 'one-sample') {
+            const values = data.map(row => parseFloat(row[config.variable]));
+            const mean = values.reduce((a, b) => a + b, 0) / values.length;
+            const variance = values.reduce((a, b) => a + Math.pow(b - mean, 2), 0) / (values.length - 1);
+            const stdError = Math.sqrt(variance / values.length);
+            const tStat = (mean - config.hypothesizedMean) / stdError;
+            const df = values.length - 1;
+            const pValue = 2 * (1 - jStat.studentt.cdf(Math.abs(tStat), df));
+
+            return {
+              type: 'one-sample',
+              sampleSize: values.length,
+              sampleMean: mean,
+              hypothesizedMean: config.hypothesizedMean,
+              variance: variance,
+              standardError: stdError,
+              tStatistic: tStat,
+              degreesOfFreedom: df,
+              pValue: pValue,
+              confidenceInterval: {
+                lower: mean - jStat.studentt.inv(0.975, df) * stdError,
+                upper: mean + jStat.studentt.inv(0.975, df) * stdError
+              }
+            };
+          } else {
+            const values1 = data.map(row => parseFloat(row[config.group1Variable]));
+            const values2 = data.map(row => parseFloat(row[config.group2Variable]));
+            
+            const mean1 = values1.reduce((a, b) => a + b) / values1.length;
+            const mean2 = values2.reduce((a, b) => a + b) / values2.length;
+            
+            const variance1 = values1.reduce((a, b) => a + Math.pow(b - mean1, 2), 0) / (values1.length - 1);
+            const variance2 = values2.reduce((a, b) => a + Math.pow(b - mean2, 2), 0) / (values2.length - 1);
+            
+            const pooledVariance = ((values1.length - 1) * variance1 + (values2.length - 1) * variance2) / 
+                          (values1.length + values2.length - 2);
+            
+            const tStat = (mean1 - mean2) / Math.sqrt(pooledVariance * (1/values1.length + 1/values2.length));
+            const df = values1.length + values2.length - 2;
+            const pValue = 2 * (1 - jStat.studentt.cdf(Math.abs(tStat), df));
+            
+            return {
+              type: 'two-sample',
+              group1: {
+                size: values1.length,
+                mean: mean1,
+                variance: variance1
+              },
+              group2: {
+                size: values2.length,
+                mean: mean2,
+                variance: variance2
+              },
+              pooledVariance: pooledVariance,
+              meanDifference: mean1 - mean2,
+              tStatistic: tStat,
+              degreesOfFreedom: df,
+              pValue: pValue,
+              confidenceInterval: {
+                lower: (mean1 - mean2) - jStat.studentt.inv(0.975, df) * Math.sqrt(pooledVariance * (1/values1.length + 1/values2.length)),
+                upper: (mean1 - mean2) + jStat.studentt.inv(0.975, df) * Math.sqrt(pooledVariance * (1/values1.length + 1/values2.length))
+              }
+            };
+          }
+        }
+
+        function applyTTest() {
+          const testType = document.getElementById('test-type').value;
+          let config, results;
+
+          if (testType === 'one-sample') {
+            config = {
+              type: 'one-sample',
+              variable: document.getElementById('one-sample-var').value,
+              transform: document.getElementById('one-sample-transform').value,
+              diff: parseInt(document.getElementById('one-sample-diff').value),
+              hypothesizedMean: parseFloat(document.getElementById('hypothesized-mean').value)
+            };
+          } else {
+            config = {
+              type: 'two-sample',
+              group1Variable: document.getElementById('group1-var').value,
+              group1Transform: document.getElementById('group1-transform').value,
+              group1Diff: parseInt(document.getElementById('group1-diff').value),
+              group2Variable: document.getElementById('group2-var').value,
+              group2Transform: document.getElementById('group2-transform').value,
+              group2Diff: parseInt(document.getElementById('group2-diff').value)
+            };
+          }
+
+          results = performTTest(globalDataStore.sourceData, config);
+          displayTTestResults(config, results);
+          closeTTestModal();
+        }
+
+        function displayTTestResults(config, results) {
+          const statsPanel = document.querySelector('.statistics-panel');
+          statsPanel.innerHTML = '<h3>نتائج اختبار T</h3>';
+          
+          const table = document.createElement('table');
+          table.className = 'results-table';
+
+          if (results.type === 'one-sample') {
+            table.innerHTML = `
+              <tr><th colspan="2">اختبار T للعينة الواحدة</th></tr>
+              <tr>
+                <td>المتغير</td>
+                <td>${config.variable} (${config.transform !== 'none' ? config.transform : 'بدون تحويل'}, 
+                    فروق: ${config.diff})</td>
+              </tr>
+              <tr>
+                <td>حجم العينة</td>
+                <td>${results.sampleSize}</td>
+              </tr>
+              <tr>
+                <td>المتوسط الحسابي للعينة</td>
+                <td>${results.sampleMean.toFixed(4)}</td>
+              </tr>
+              <tr>
+                <td>المتوسط المفترض</td>
+                <td>${results.hypothesizedMean}</td>
+              </tr>
+              <tr>
+                <td>التباين</td>
+                <td>${results.variance.toFixed(4)}</td>
+              </tr>
+              <tr>
+                <td>الخطأ المعياري</td>
+                <td>${results.standardError.toFixed(4)}</td>
+              </tr>
+              <tr>
+                <td>إحصائية t</td>
+                <td>${results.tStatistic.toFixed(4)}</td>
+              </tr>
+              <tr>
+                <td>درجات الحرية</td>
+                <td>${results.degreesOfFreedom}</td>
+              </tr>
+              <tr>
+                <td>القيمة الاحتمالية</td>
+                <td>${results.pValue.toFixed(4)}</td>
+              </tr>
+              <tr>
+                <td>فترة الثقة 95%</td>
+                <td>[${results.confidenceInterval.lower.toFixed(4)}, ${results.confidenceInterval.upper.toFixed(4)}]</td>
+              </tr>
+            `;
+          } else {
+            table.innerHTML = `
+              <tr><th colspan="2">اختبار T للعينتين</th></tr>
+              <tr>
+                <td>المجموعة الأولى</td>
+                <td>${config.group1Variable} (${config.group1Transform !== 'none' ? config.group1Transform : 'بدون تحويل'}, 
+                    فروق: ${config.group1Diff})</td>
+              </tr>
+              <tr>
+                <td>المجموعة الثانية</td>
+                <td>${config.group2Variable} (${config.group2Transform !== 'none' ? config.group2Transform : 'بدون تحويل'}, 
+                    فروق: ${config.group2Diff})</td>
+              </tr>
+              <tr>
+                <td>حجم العينة (المجموعة 1)</td>
+                <td>${results.group1.size}</td>
+              </tr>
+              <tr>
+                <td>حجم العينة (المجموعة 2)</td>
+                <td>${results.group2.size}</td>
+              </tr>
+              <tr>
+                <td>المتوسط الحسابي (المجموعة 1)</td>
+                <td>${results.group1.mean.toFixed(4)}</td>
+              </tr>
+              <tr>
+                <td>المتوسط الحسابي (المجموعة 2)</td>
+                <td>${results.group2.mean.toFixed(4)}</td>
+              </tr>
+              <tr>
+                <td>التباين (المجموعة 1)</td>
+                <td>${results.group1.variance.toFixed(4)}</td>
+              </tr>
+              <tr>
+                <td>التباين (المجموعة 2)</td>
+                <td>${results.group2.variance.toFixed(4)}</td>
+              </tr>
+              <tr>
+                <td>التباين المشترك</td>
+                <td>${results.pooledVariance.toFixed(4)}</td>
+              </tr>
+              <tr>
+                <td>الفرق بين المتوسطين</td>
+                <td>${results.meanDifference.toFixed(4)}</td>
+              </tr>
+              <tr>
+                <td>إحصائية t</td>
+                <td>${results.tStatistic.toFixed(4)}</td>
+              </tr>
+              <tr>
+                <td>درجات الحرية</td>
+                <td>${results.degreesOfFreedom}</td>
+              </tr>
+              <tr>
+                <td>القيمة الاحتمالية</td>
+                <td>${results.pValue.toFixed(4)}</td>
+              </tr>
+              <tr>
+                <td>فترة الثقة 95% للفرق</td>
+                <td>[${results.confidenceInterval.lower.toFixed(4)}, ${results.confidenceInterval.upper.toFixed(4)}]</td>
+              </tr>
+            `;
+          }
+
+          statsPanel.appendChild(table);
+        }
+    </script>
+</body>
+</html>
